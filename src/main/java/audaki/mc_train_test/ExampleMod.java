@@ -1,4 +1,4 @@
-package net.fabricmc.example;
+package audaki.mc_train_test;
 
 import net.fabricmc.api.ModInitializer;
 

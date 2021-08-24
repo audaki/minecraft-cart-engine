@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "audaki_mc_train_test",
   "version": "${version}",
 
   "name": "Example Mod",
@@ -19,7 +19,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "audaki.mc_train_test.ExampleMod"
     ]
   },
   "mixins": [
@@ -27,7 +27,7 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.11.3",
+    "fabricloader": ">=0.11.6",
     "fabric": "*",
     "minecraft": "1.17.x",
     "java": ">=16"
