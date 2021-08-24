@@ -85,7 +85,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                 ++e;
             }
             case ASCENDING_WEST -> {
-                this.setVelocity(velocity.add(velocity.x , 0.0D, 0.0D));
+                this.setVelocity(velocity.add(g , 0.0D, 0.0D));
                 ++e;
             }
             case ASCENDING_NORTH -> {
