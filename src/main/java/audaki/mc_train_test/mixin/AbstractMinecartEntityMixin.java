@@ -200,14 +200,14 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                 }
             }
 
-            int eligibleRailTrackCount = eligibleNeighbors.get() / 2;
+            int eligibleForwardRailTrackCount = eligibleNeighbors.get() / 2;
 
-            if (eligibleRailTrackCount <= 1)
+            if (eligibleForwardRailTrackCount <= 1)
                 
                 return fallback;
 
 
-            return (-3.D + eligibleRailTrackCount * 6.D) / 20.D;
+            return (-3.D + eligibleForwardRailTrackCount * 6.D) / 20.D;
         };
 
         double maxHorizontalMovementPerTick = calculateMaxHorizontalMovementPerTick.get();
