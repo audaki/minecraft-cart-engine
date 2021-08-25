@@ -203,9 +203,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
             int eligibleForwardRailTrackCount = eligibleNeighbors.get() / 2;
 
             if (eligibleForwardRailTrackCount <= 1)
-
                 return fallback;
-
 
             return (-3.D + eligibleForwardRailTrackCount * 6.D) / 20.D;
         };
@@ -319,7 +317,6 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                 // Tps = Ticks per second
                 final double momentumForBasisTps = 1.0D / 6.0D;
                 final double maxSkippedBlocksToConsider = 3.0D;
-
 
 
                 double acceleration = basisAccelerationPerTick;
