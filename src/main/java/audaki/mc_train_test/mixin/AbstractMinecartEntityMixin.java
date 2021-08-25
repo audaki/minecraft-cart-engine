@@ -78,14 +78,14 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         }
 
         Vec3d velocity = this.getVelocity();
-        RailShape railShape = state.get(((AbstractRailBlock)state.getBlock()).getShapeProperty());
+        RailShape railShape = state.get(((AbstractRailBlock) state.getBlock()).getShapeProperty());
         switch (railShape) {
             case ASCENDING_EAST -> {
                 this.setVelocity(velocity.add(-g, 0.0D, 0.0D));
                 ++e;
             }
             case ASCENDING_WEST -> {
-                this.setVelocity(velocity.add(g , 0.0D, 0.0D));
+                this.setVelocity(velocity.add(g, 0.0D, 0.0D));
                 ++e;
             }
             case ASCENDING_NORTH -> {
@@ -150,7 +150,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                     if (!n1HasEligibleType)
                         return new ArrayList<>();
 
-                    RailShape n1RailShape = n1State.get(((AbstractRailBlock)n1State.getBlock()).getShapeProperty());
+                    RailShape n1RailShape = n1State.get(((AbstractRailBlock) n1State.getBlock()).getShapeProperty());
 
                     if (n1RailShape != railShape)
                         return new ArrayList<>();
@@ -168,7 +168,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                     if (!n2HasEligibleType)
                         return new ArrayList<>();
 
-                    RailShape n2RailShape = n2State.get(((AbstractRailBlock)n2State.getBlock()).getShapeProperty());
+                    RailShape n2RailShape = n2State.get(((AbstractRailBlock) n2State.getBlock()).getShapeProperty());
 
                     if (n2RailShape != railShape)
                         return new ArrayList<>();
@@ -203,7 +203,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
             int eligibleForwardRailTrackCount = eligibleNeighbors.get() / 2;
 
             if (eligibleForwardRailTrackCount <= 1)
-                
+
                 return fallback;
 
 
@@ -244,19 +244,19 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
             }
         }
 
-        p = (double)pos.getX() + 0.5D + (double)adjacentRail1RelPos.getX() * 0.5D;
-        double q = (double)pos.getZ() + 0.5D + (double)adjacentRail1RelPos.getZ() * 0.5D;
-        double r = (double)pos.getX() + 0.5D + (double)adjacentRail2RelPos.getX() * 0.5D;
-        double s = (double)pos.getZ() + 0.5D + (double)adjacentRail2RelPos.getZ() * 0.5D;
+        p = (double) pos.getX() + 0.5D + (double) adjacentRail1RelPos.getX() * 0.5D;
+        double q = (double) pos.getZ() + 0.5D + (double) adjacentRail1RelPos.getZ() * 0.5D;
+        double r = (double) pos.getX() + 0.5D + (double) adjacentRail2RelPos.getX() * 0.5D;
+        double s = (double) pos.getZ() + 0.5D + (double) adjacentRail2RelPos.getZ() * 0.5D;
         h = r - p;
         i = s - q;
         double x;
         double v;
         double w;
         if (h == 0.0D) {
-            x = f - (double)pos.getZ();
+            x = f - (double) pos.getZ();
         } else if (i == 0.0D) {
-            x = d - (double)pos.getX();
+            x = d - (double) pos.getX();
         } else {
             v = d - p;
             w = f - q;
@@ -276,9 +276,9 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         this.move(MovementType.SELF, movement);
 
         if (adjacentRail1RelPos.getY() != 0 && MathHelper.floor(this.getX()) - pos.getX() == adjacentRail1RelPos.getX() && MathHelper.floor(this.getZ()) - pos.getZ() == adjacentRail1RelPos.getZ()) {
-            this.setPosition(this.getX(), this.getY() + (double)adjacentRail1RelPos.getY(), this.getZ());
+            this.setPosition(this.getX(), this.getY() + (double) adjacentRail1RelPos.getY(), this.getZ());
         } else if (adjacentRail2RelPos.getY() != 0 && MathHelper.floor(this.getX()) - pos.getX() == adjacentRail2RelPos.getX() && MathHelper.floor(this.getZ()) - pos.getZ() == adjacentRail2RelPos.getZ()) {
-            this.setPosition(this.getX(), this.getY() + (double)adjacentRail2RelPos.getY(), this.getZ());
+            this.setPosition(this.getX(), this.getY() + (double) adjacentRail2RelPos.getY(), this.getZ());
         }
 
         this.applySlowdown();
