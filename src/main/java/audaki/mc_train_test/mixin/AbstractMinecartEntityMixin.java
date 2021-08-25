@@ -11,9 +11,9 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
-import org.apache.logging.log4j.util.TriConsumer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -117,17 +116,20 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         }
 
 
-        double defaultMaxHorizontalMovementPerTick = 0.4D;
+        double vanillaMaxHorizontalMovementPerTick = 0.4D;
         double horizontalMomentumPerTick = this.getVelocity().horizontalLength();
 
         Supplier<Double> calculateMaxHorizontalMovementPerTick = () -> {
+            final double fallbackSpeedFactor = 1.15D;
             double fallback = this.getMaxOffRailSpeed();
 
             if (!this.hasPassengers())
                 return fallback;
 
-            if (horizontalMomentumPerTick < defaultMaxHorizontalMovementPerTick)
+            if (horizontalMomentumPerTick < vanillaMaxHorizontalMovementPerTick)
                 return fallback;
+
+            fallback *= fallbackSpeedFactor;
 
             boolean hasEligibleShape = railShape == RailShape.NORTH_SOUTH || railShape == RailShape.EAST_WEST;
             if (!hasEligibleShape)
@@ -189,7 +191,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
             ArrayList<Pair<BlockPos, RailShape>> newNeighbors = checkNeighbors.apply(pos, railShape);
 
-            while (!newNeighbors.isEmpty() && eligibleNeighbors.get() < 8) {
+            while (!newNeighbors.isEmpty() && eligibleNeighbors.get() < 16) {
                 ArrayList<Pair<BlockPos, RailShape>> tempNewNeighbors = new ArrayList<>(newNeighbors);
                 newNeighbors.clear();
 
@@ -207,14 +209,14 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
             int eligibleForwardRailTrackCount = eligibleNeighbors.get() / 2;
 
-            if (eligibleForwardRailTrackCount <= 0)
+            if (eligibleForwardRailTrackCount <= 1)
                 return fallback;
 
-            return (3.5D + eligibleForwardRailTrackCount * 9.D) / 20.D;
+            return (2.01D + eligibleForwardRailTrackCount * 4.0D) / 20.0D;
         };
 
         double maxHorizontalMovementPerTick = calculateMaxHorizontalMovementPerTick.get();
-        double maxHorizontalMomentumPerTick = Math.max(maxHorizontalMovementPerTick * 5.0D, 2.5D);
+        double maxHorizontalMomentumPerTick = Math.max(maxHorizontalMovementPerTick * 5.0D, 4.2D);
 
 //        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09) {
 //            System.out.println(maxHorizontalMovementPerTick + " - " + maxHorizontalMomentumPerTick);
@@ -222,8 +224,9 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
         double l = Math.min(maxHorizontalMomentumPerTick, velocity.horizontalLength());
         this.setVelocity(new Vec3d(l * h / j, velocity.y, l * i / j));
-//
-//        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09) {
+
+
+//        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09 && this.world.getServer() != null && this.world.getServer().getTicks() % 3 == 0) {
 //            System.out.println("Momentum: " + (int) this.getX() + " -> " + this.getVelocity().horizontalLength() + " m/t");
 //        }
 
@@ -246,8 +249,8 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
             } else {
                 double brakeFactor = 0.5D;
 
-                if (horizontalMomentumPerTick > defaultMaxHorizontalMovementPerTick) {
-                    brakeFactor = Math.pow(brakeFactor, 1.D + ((horizontalMomentumPerTick - defaultMaxHorizontalMovementPerTick) / 0.8D));
+                if (horizontalMomentumPerTick > 4.0D * vanillaMaxHorizontalMovementPerTick) {
+                    brakeFactor = Math.pow(brakeFactor, 1.0D + ((horizontalMomentumPerTick - 3.99D * vanillaMaxHorizontalMovementPerTick) / 1.2D));
                 }
 
                 this.setVelocity(this.getVelocity().multiply(brakeFactor, 0.0D, brakeFactor));
@@ -320,23 +323,25 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         if (onPoweredRail) {
             vec3d7 = this.getVelocity();
             double momentum = vec3d7.horizontalLength();
-            final double basisAccelerationPerTick = 0.022D;
+            final double basisAccelerationPerTick = 0.021D;
             if (momentum > 0.01D) {
 
                 // Based on a 10 ticks per second basis spent per powered block we calculate a fair acceleration per tick
                 // due to spending less ticks per powered block on higher speeds (and even skipping blocks)
                 final double basisTicksPerSecond = 10.0D;
                 // Tps = Ticks per second
-                final double momentumForBasisTps = 1.0D / basisTicksPerSecond;
+                final double tickMovementForBasisTps = 1.0D / basisTicksPerSecond;
                 final double maxSkippedBlocksToConsider = 3.0D;
 
 
                 double acceleration = basisAccelerationPerTick;
-                if (momentum > momentumForBasisTps) {
-                    acceleration *= Math.min((1.0D + maxSkippedBlocksToConsider) * basisTicksPerSecond, momentum / momentumForBasisTps);
+                final double distanceMovedHorizontally = movement.horizontalLength();
 
-                    // Add progressively faster acceleration for higher speeds;
-                    double highspeedFactor = 1.0D + (0.25D * (momentum / momentumForBasisTps / basisTicksPerSecond));
+                if (distanceMovedHorizontally > tickMovementForBasisTps) {
+                    acceleration *= Math.min((1.0D + maxSkippedBlocksToConsider) * basisTicksPerSecond, distanceMovedHorizontally / tickMovementForBasisTps);
+
+                    // Add progressively slower (or faster) acceleration for higher speeds;
+                    double highspeedFactor = 1.0D + MathHelper.clamp(-0.45D * (distanceMovedHorizontally / tickMovementForBasisTps / basisTicksPerSecond), -0.7D, 2.0D);
                     acceleration *= highspeedFactor;
                 }
                 this.setVelocity(vec3d7.add(acceleration * (vec3d7.x / momentum), 0.0D, acceleration * (vec3d7.z / momentum)));
@@ -345,7 +350,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                 Vec3d vec3d8 = this.getVelocity();
                 double ah = vec3d8.x;
                 double ai = vec3d8.z;
-                final double railStopperAcceleration = basisAccelerationPerTick * 10.0D;
+                final double railStopperAcceleration = basisAccelerationPerTick * 12.0D;
                 if (railShape == RailShape.EAST_WEST) {
                     if (this.willHitBlockAt(pos.west())) {
                         ah = railStopperAcceleration;
