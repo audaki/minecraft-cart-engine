@@ -311,7 +311,16 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
             vec3d7 = this.getVelocity();
             af = vec3d7.horizontalLength();
             if (af > 0.01D) {
-                this.setVelocity(vec3d7.add(vec3d7.x / af * 0.06D, 0.0D, vec3d7.z / af * 0.06D));
+                double accelerationPerTick = 0.06D;
+
+                // Based on a designated 3 ticks per second per powered block we calculate a fair acceleration per tick
+                // due to spending less ticks per powered block on higher speeds (and even skipping blocks)
+
+                if (currentHorizontalMomentumPerTick >= 0.33D) {
+                    accelerationPerTick *= Math.min(6.0D, currentHorizontalMomentumPerTick / 0.33D);
+                }
+
+                this.setVelocity(vec3d7.add(vec3d7.x / af * accelerationPerTick, 0.0D, vec3d7.z / af * accelerationPerTick));
             } else {
                 Vec3d vec3d8 = this.getVelocity();
                 double ah = vec3d8.x;
