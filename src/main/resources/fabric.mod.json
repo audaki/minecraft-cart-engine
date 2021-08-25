@@ -1,16 +1,17 @@
 {
   "schemaVersion": 1,
-  "id": "audaki_mc_train_test",
+  "id": "audaki_cart_engine",
   "version": "${version}",
 
-  "name": "Audaki's usable minecart Transport",
-  "description": "Usable minecart Transport",
+  "name": "Audaki Cart Engine",
+  "description": "Audaki Cart Engine offers well designed and properly balanced, competitive and viable cart-based passenger transportation.",
+
   "authors": [
     "Audaki"
   ],
   "contact": {
     "homepage": "https://audaki.de/",
-    "sources": "https://github.com/audaki/mc-train-test"
+    "sources": "https://github.com/audaki/minecraft-cart-engine"
   },
 
   "license": "CC0-1.0",
@@ -20,14 +21,10 @@
   "mixins": [
     "modid.mixins.json"
   ],
-
   "depends": {
     "fabricloader": ">=0.11.6",
     "fabric": "*",
     "minecraft": "1.17.x",
     "java": ">=16"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }

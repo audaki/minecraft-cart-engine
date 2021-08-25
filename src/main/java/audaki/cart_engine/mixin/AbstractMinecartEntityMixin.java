@@ -1,4 +1,4 @@
-package audaki.mc_train_test.mixin;
+package audaki.cart_engine.mixin;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.AbstractRailBlock;
@@ -11,7 +11,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -158,7 +157,6 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                         return new ArrayList<>();
 
                     RailShape n1RailShape = n1State.get(((AbstractRailBlock) n1State.getBlock()).getShapeProperty());
-
                     if (n1RailShape != railShape)
                         return new ArrayList<>();
 
@@ -350,7 +348,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                 Vec3d vec3d8 = this.getVelocity();
                 double ah = vec3d8.x;
                 double ai = vec3d8.z;
-                final double railStopperAcceleration = basisAccelerationPerTick * 12.0D;
+                final double railStopperAcceleration = basisAccelerationPerTick * 16.0D;
                 if (railShape == RailShape.EAST_WEST) {
                     if (this.willHitBlockAt(pos.west())) {
                         ah = railStopperAcceleration;

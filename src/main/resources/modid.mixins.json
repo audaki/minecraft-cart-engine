@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "audaki.mc_train_test.mixin",
+  "package": "audaki.cart_engine.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "AbstractMinecartEntityMixin"
