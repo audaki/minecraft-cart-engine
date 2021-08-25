@@ -52,6 +52,11 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
     @Inject(at = @At("HEAD"), method = "moveOnRail", cancellable = true)
     public void moveOnRailOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
+
+//        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09) {
+//            System.out.println("Momentum: " + (int) this.getX() + " -> " + this.getVelocity().horizontalLength() + " m/t");
+//        }
+
         this.modifiedMoveOnRail(pos, state);
         ci.cancel();
     }
@@ -184,7 +189,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
             ArrayList<Pair<BlockPos, RailShape>> newNeighbors = checkNeighbors.apply(pos, railShape);
 
-            while (!newNeighbors.isEmpty() && eligibleNeighbors.get() < 12) {
+            while (!newNeighbors.isEmpty() && eligibleNeighbors.get() < 8) {
                 ArrayList<Pair<BlockPos, RailShape>> tempNewNeighbors = new ArrayList<>(newNeighbors);
                 newNeighbors.clear();
 
@@ -202,18 +207,25 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
             int eligibleForwardRailTrackCount = eligibleNeighbors.get() / 2;
 
-            if (eligibleForwardRailTrackCount <= 1)
+            if (eligibleForwardRailTrackCount <= 0)
                 return fallback;
 
-            return (-3.D + eligibleForwardRailTrackCount * 6.D) / 20.D;
+            return (2.D + eligibleForwardRailTrackCount * 10.D) / 20.D;
         };
 
         double maxHorizontalMovementPerTick = calculateMaxHorizontalMovementPerTick.get();
-
         double maxHorizontalMomentumPerTick = Math.max(maxHorizontalMovementPerTick * 5.0D, 2.0D);
+
+//        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09) {
+//            System.out.println(maxHorizontalMovementPerTick + " - " + maxHorizontalMomentumPerTick);
+//        }
 
         double l = Math.min(maxHorizontalMomentumPerTick, velocity.horizontalLength());
         this.setVelocity(new Vec3d(l * h / j, velocity.y, l * i / j));
+//
+//        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09) {
+//            System.out.println("Momentum: " + (int) this.getX() + " -> " + this.getVelocity().horizontalLength() + " m/t");
+//        }
 
         Entity entity = this.getFirstPassenger();
         if (entity instanceof PlayerEntity) {
@@ -308,20 +320,24 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         if (onPoweredRail) {
             vec3d7 = this.getVelocity();
             double momentum = vec3d7.horizontalLength();
+            final double basisAccelerationPerTick = 0.022D;
             if (momentum > 0.01D) {
 
-                // Based on a 6 ticks per second basis spent per powered block we calculate a fair acceleration per tick
+                // Based on a 10 ticks per second basis spent per powered block we calculate a fair acceleration per tick
                 // due to spending less ticks per powered block on higher speeds (and even skipping blocks)
-                final double basisAccelerationPerTick = 0.08D;
-                final double basisTicksPerSecond = 6.0D;
+                final double basisTicksPerSecond = 10.0D;
                 // Tps = Ticks per second
-                final double momentumForBasisTps = 1.0D / 6.0D;
+                final double momentumForBasisTps = 1.0D / basisTicksPerSecond;
                 final double maxSkippedBlocksToConsider = 3.0D;
 
 
                 double acceleration = basisAccelerationPerTick;
                 if (momentum > momentumForBasisTps) {
                     acceleration *= Math.min((1.0D + maxSkippedBlocksToConsider) * basisTicksPerSecond, momentum / momentumForBasisTps);
+
+                    // Add progressively faster acceleration for higher speeds;
+                    double highspeedFactor = 1.0D + (0.25D * (momentum / momentumForBasisTps / basisTicksPerSecond));
+                    acceleration *= highspeedFactor;
                 }
                 this.setVelocity(vec3d7.add(acceleration * (vec3d7.x / momentum), 0.0D, acceleration * (vec3d7.z / momentum)));
 
@@ -329,11 +345,12 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                 Vec3d vec3d8 = this.getVelocity();
                 double ah = vec3d8.x;
                 double ai = vec3d8.z;
+                final double railStopperAcceleration = basisAccelerationPerTick * 10.0D;
                 if (railShape == RailShape.EAST_WEST) {
                     if (this.willHitBlockAt(pos.west())) {
-                        ah = 0.04D;
+                        ah = railStopperAcceleration;
                     } else if (this.willHitBlockAt(pos.east())) {
-                        ah = -0.04D;
+                        ah = -railStopperAcceleration;
                     }
                 } else {
                     if (railShape != RailShape.NORTH_SOUTH) {
@@ -341,9 +358,9 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                     }
 
                     if (this.willHitBlockAt(pos.north())) {
-                        ai = 0.04D;
+                        ai = railStopperAcceleration;
                     } else if (this.willHitBlockAt(pos.south())) {
-                        ai = -0.04D;
+                        ai = -railStopperAcceleration;
                     }
                 }
 
