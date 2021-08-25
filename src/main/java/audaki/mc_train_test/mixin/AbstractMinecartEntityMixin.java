@@ -301,7 +301,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         if (ac != pos.getX() || ad != pos.getZ()) {
             vec3d7 = this.getVelocity();
             af = vec3d7.horizontalLength();
-            this.setVelocity(af * Math.max(1.0D, (double)(ac - pos.getX())), vec3d7.y, af * Math.max(1.0D, (double)(ad - pos.getZ())));
+            this.setVelocity(af * Math.min(1.0D, (double)(ac - pos.getX())), vec3d7.y, af * Math.min(1.0D, (double)(ad - pos.getZ())));
         }
 
         if (onPoweredRail) {
