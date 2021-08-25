@@ -210,11 +210,11 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
             if (eligibleForwardRailTrackCount <= 0)
                 return fallback;
 
-            return (2.D + eligibleForwardRailTrackCount * 10.D) / 20.D;
+            return (3.5D + eligibleForwardRailTrackCount * 9.D) / 20.D;
         };
 
         double maxHorizontalMovementPerTick = calculateMaxHorizontalMovementPerTick.get();
-        double maxHorizontalMomentumPerTick = Math.max(maxHorizontalMovementPerTick * 5.0D, 2.0D);
+        double maxHorizontalMomentumPerTick = Math.max(maxHorizontalMovementPerTick * 5.0D, 2.5D);
 
 //        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09) {
 //            System.out.println(maxHorizontalMovementPerTick + " - " + maxHorizontalMomentumPerTick);
