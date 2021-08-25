@@ -3,25 +3,20 @@
   "id": "audaki_mc_train_test",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Audaki's usable minecart Transport",
+  "description": "Usable minecart Transport",
   "authors": [
-    "Me!"
+    "Audaki"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://audaki.de/",
+    "sources": "https://github.com/audaki/mc-train-test"
   },
 
   "license": "CC0-1.0",
   "icon": "assets/modid/icon.png",
 
   "environment": "*",
-  "entrypoints": {
-    "main": [
-      "audaki.mc_train_test.ExampleMod"
-    ]
-  },
   "mixins": [
     "modid.mixins.json"
   ],
