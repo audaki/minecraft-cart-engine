@@ -36,10 +36,10 @@ Due to the balanced acceleration curve railways can still be used early-game wit
   pieces behind and in front of the cart)
 - Raised fallback maximum speed from 8m/s to 9.2m/s for carts with passengers
 - Tweaked powered rail acceleration to factor in fewer spent ticks on higher speeds and multiply the acceleration accordingly
-- Tweaked acceleration to be require more powered rails on higher speeds
+- Tweaked acceleration to require more powered rails on higher speeds
 - Tweaked acceleration to feel good and somewhat train-y.
 - Tweaked achievable momentum for the new high-speed
-- Tweaked breaks to handle the higher speed and momentum properly
+- Tweaked brakes (i.e. unpowered Power-Rail) to handle the higher speed and momentum properly
 - Tweaked "kick-start" speed when starting from a standing block with a powered rail
 - Cart Engine simulates travel along the railway and dynamically adjusts allowed speed based on rail conditions around the cart
 - High-Speed Cart temporarily slows down for slopes and curves
