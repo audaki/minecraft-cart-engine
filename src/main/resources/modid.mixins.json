@@ -3,7 +3,9 @@
   "minVersion": "0.8",
   "package": "audaki.cart_engine.mixin",
   "compatibilityLevel": "JAVA_16",
-  "mixins": [],
+  "mixins": [
+    "AbstractMinecartEntityMixin"
+  ],
   "client": [],
   "server": [
     "AbstractMinecartEntityMixin"
