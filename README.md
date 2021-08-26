@@ -3,6 +3,8 @@
 ## Brief
 Audaki Cart Engine offers well designed and properly balanced, competitive and viable cart-based passenger transportation.
 
+This mod is server-sided only and based on Fabric.
+
 ## Foundation
 This was mod was created since every mod I found that increased the speed of minecarts broke stuff and didn't
 work with existing rail lines. Additionally most redstone stuff breaks when your cart moves with more than 10m/s.
