@@ -15,11 +15,11 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/audaki_cart_engine/icon.png",
 
   "environment": "*",
   "mixins": [
-    "modid.mixins.json"
+    "audaki_cart_engine.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.12.8",
