@@ -51,7 +51,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
      * @reason modify minecart behavior
      */
     @Overwrite
-    protected void moveOnRail(BlockPos pos, BlockState state) {
+    public void moveOnRail(BlockPos pos, BlockState state) {
         this.onLanding();
         double d = this.getX();
         double e = this.getY();
