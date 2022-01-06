@@ -14,8 +14,10 @@ import net.minecraft.entity.vehicle.AbstractMinecartEntity;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-@Mixin(value = AbstractMinecartEntity.class, priority = 500) // lower value, higher priority - apply first so other mods can still mixin
+@Mixin(AbstractMinecartEntity.class)
 public abstract class AbstractMinecartEntityMixin extends Entity {
     public AbstractMinecartEntityMixin(EntityType<?> type, World world) {
         super(type, world);
@@ -46,13 +48,19 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         return null;
     }
 
-    /**
-     * @author audaki
-     * @reason modify minecart behavior
-     */
-    @Overwrite
-    public void moveOnRail(BlockPos pos, BlockState state) {
-        this.onLanding();
+    @Inject(at = @At("HEAD"), method = "moveOnRail", cancellable = true)
+    public void moveOnRailOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
+
+//        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09) {
+//            System.out.println("Momentum: " + (int) this.getX() + " -> " + this.getVelocity().horizontalLength() + " m/t");
+//        }
+
+        this.modifiedMoveOnRail(pos, state);
+        ci.cancel();
+    }
+
+    private void modifiedMoveOnRail(BlockPos pos, BlockState state) {
+        this.fallDistance = 0.0F;
         double d = this.getX();
         double e = this.getY();
         double f = this.getZ();
