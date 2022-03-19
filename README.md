@@ -6,7 +6,7 @@ Audaki Cart Engine offers well designed and properly balanced, competitive and v
 This mod is a server-sided (and SSP) mod based on Fabric.
 
 ## Foundation
-This was mod was created since every mod I found that increased the speed of minecarts broke stuff and didn't
+This mod was created since every mod I found that increased the speed of minecarts broke stuff and didn't
 work with existing rail lines. Additionally most redstone stuff breaks when your cart moves with more than 10m/s.
 
 ## Quality Engineering
