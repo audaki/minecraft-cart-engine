@@ -16,7 +16,8 @@
   "contact": {
     "homepage": "https://www.curseforge.com/minecraft/mc-mods/audaki-cart-engine",
     "sources": "https://github.com/audaki/minecraft-cart-engine",
-    "issues": "https://github.com/audaki/minecraft-cart-engine/issues"
+    "issues": "https://github.com/audaki/minecraft-cart-engine/issues",
+    "wiki": "https://github.com/audaki/minecraft-cart-engine/wiki"
   },
 
   "license": "CC0-1.0",
@@ -27,8 +28,20 @@
     "audaki_cart_engine.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14",
+    "fabricloader": "*",
     "minecraft": ">=1.19",
-    "java": ">=17"
+    "java": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.wiki": "https://github.com/audaki/minecraft-cart-engine/wiki",
+        "modmenu.twitter": "https://twitter.com/EarthlingAudaki",
+        "modmenu.curseforge": "https://www.curseforge.com/minecraft/mc-mods/audaki-cart-engine"
+      }
+    }
   }
 }
