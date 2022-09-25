@@ -4,14 +4,19 @@
   "version": "${version}",
 
   "name": "Audaki Cart Engine",
-  "description": "Audaki Cart Engine offers well designed and properly balanced, competitive and viable cart-based passenger transportation.",
+  "description": "Audaki Cart Engine: Improved & Faster Minecarts (Vanilla Carts, Balanced for Survival)",
 
-  "authors": [
-    "Audaki"
-  ],
+  "authors": [{
+    "name": "Audaki",
+    "contact": {
+      "twitter": "https://twitter.com/EarthlingAudaki"
+    }
+  }],
+
   "contact": {
-    "homepage": "https://audaki.de/",
-    "sources": "https://github.com/audaki/minecraft-cart-engine"
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/audaki-cart-engine",
+    "sources": "https://github.com/audaki/minecraft-cart-engine",
+    "issues": "https://github.com/audaki/minecraft-cart-engine/issues"
   },
 
   "license": "CC0-1.0",
@@ -23,7 +28,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.14",
-    "fabric": ">=0.11",
+    "fabric": ">=0.50",
     "minecraft": ">=1.19",
     "java": ">=17"
   }
