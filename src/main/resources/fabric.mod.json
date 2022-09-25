@@ -30,7 +30,7 @@
   "depends": {
     "fabricloader": "*",
     "minecraft": ">=1.19",
-    "java": "*"
+    "java": ">=17"
   },
   "suggests": {
     "modmenu": "*"
