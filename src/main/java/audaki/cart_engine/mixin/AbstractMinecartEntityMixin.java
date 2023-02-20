@@ -11,11 +11,15 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
+import net.minecraft.entity.vehicle.AbstractMinecartEntity.Type;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,16 +46,25 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
     protected abstract double getMaxSpeed();
 
     @Shadow
+    protected abstract Type getMinecartType();
+
+    @Shadow
     private static Pair<Vec3i, Vec3i> getAdjacentRailPositionsByShape(RailShape shape) {
         return null;
     }
 
-    /**
-     * @author audaki
-     * @reason modify minecart behavior
-     */
-    @Overwrite
-    public void moveOnRail(BlockPos pos, BlockState state) {
+    @Inject(at = @At("HEAD"), method = "moveOnRail", cancellable = true)
+    protected void moveOnRailOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
+        // We only change logic for rideable minecarts so we don't break hopper/chest minecart creations
+        if (this.getMinecartType() != Type.RIDEABLE) {
+            return;
+        }
+
+        this.modifiedMoveOnRail(pos, state);
+        ci.cancel();
+    }
+
+    protected void modifiedMoveOnRail(BlockPos pos, BlockState state) {
         this.onLanding();
         double d = this.getX();
         double e = this.getY();
