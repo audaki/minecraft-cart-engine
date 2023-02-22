@@ -4,7 +4,7 @@
   "package": "audaki.cart_engine.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "AbstractMinecartEntityMixin"
+    "MinecartEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

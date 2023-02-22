@@ -1,5 +1,6 @@
 package audaki.cart_engine.mixin;
 
+import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.AbstractRailBlock;
 import net.minecraft.block.BlockState;
@@ -11,60 +12,59 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
-import net.minecraft.entity.vehicle.AbstractMinecartEntity.Type;
+import net.minecraft.entity.vehicle.MinecartEntity;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-@Mixin(value = AbstractMinecartEntity.class, priority = 500) // lower value, higher priority - apply first so other mods can still mixin
-public abstract class AbstractMinecartEntityMixin extends Entity {
-    public AbstractMinecartEntityMixin(EntityType<?> type, World world) {
+@Mixin(value = MinecartEntity.class, priority = 500)
+public abstract class MinecartEntityMixin extends AbstractMinecartEntity {
+    public MinecartEntityMixin(EntityType<?> type, World world) {
         super(type, world);
     }
 
-    @Shadow
-    protected abstract boolean willHitBlockAt(BlockPos pos);
+    private static final Map<RailShape, Pair<Vec3i, Vec3i>> ADJACENT_RAIL_POSITIONS_BY_SHAPE;
 
-    @Shadow
-    public abstract Vec3d snapPositionToRail(double x, double y, double z);
+    static {
+        ADJACENT_RAIL_POSITIONS_BY_SHAPE = (Map) Util.make(Maps.newEnumMap(RailShape.class), (map) -> {
+            Vec3i vec3i = Direction.WEST.getVector();
+            Vec3i vec3i2 = Direction.EAST.getVector();
+            Vec3i vec3i3 = Direction.NORTH.getVector();
+            Vec3i vec3i4 = Direction.SOUTH.getVector();
+            Vec3i vec3i5 = vec3i.down();
+            Vec3i vec3i6 = vec3i2.down();
+            Vec3i vec3i7 = vec3i3.down();
+            Vec3i vec3i8 = vec3i4.down();
+            map.put(RailShape.NORTH_SOUTH, Pair.of(vec3i3, vec3i4));
+            map.put(RailShape.EAST_WEST, Pair.of(vec3i, vec3i2));
+            map.put(RailShape.ASCENDING_EAST, Pair.of(vec3i5, vec3i2));
+            map.put(RailShape.ASCENDING_WEST, Pair.of(vec3i, vec3i6));
+            map.put(RailShape.ASCENDING_NORTH, Pair.of(vec3i3, vec3i8));
+            map.put(RailShape.ASCENDING_SOUTH, Pair.of(vec3i7, vec3i4));
+            map.put(RailShape.SOUTH_EAST, Pair.of(vec3i4, vec3i2));
+            map.put(RailShape.SOUTH_WEST, Pair.of(vec3i4, vec3i));
+            map.put(RailShape.NORTH_WEST, Pair.of(vec3i3, vec3i));
+            map.put(RailShape.NORTH_EAST, Pair.of(vec3i3, vec3i2));
+        });
+    }
 
-    @Shadow
-    protected abstract void applySlowdown();
+    private boolean willHitBlockAt(BlockPos pos) {
+        return this.world.getBlockState(pos).isSolidBlock(this.world, pos);
+    }
 
-    @Shadow
-    protected abstract double getMaxSpeed();
-
-    @Shadow
-    protected abstract Type getMinecartType();
-
-    @Shadow
     private static Pair<Vec3i, Vec3i> getAdjacentRailPositionsByShape(RailShape shape) {
-        return null;
+        return (Pair)ADJACENT_RAIL_POSITIONS_BY_SHAPE.get(shape);
     }
 
-    @Inject(at = @At("HEAD"), method = "moveOnRail", cancellable = true)
-    protected void moveOnRailOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
-        // We only change logic for rideable minecarts so we don't break hopper/chest minecart creations
-        if (this.getMinecartType() != Type.RIDEABLE) {
-            return;
-        }
-
-        this.modifiedMoveOnRail(pos, state);
-        ci.cancel();
-    }
-
-    protected void modifiedMoveOnRail(BlockPos pos, BlockState state) {
+    public void moveOnRail(BlockPos pos, BlockState state) {
         this.onLanding();
         double d = this.getX();
         double e = this.getY();
@@ -221,17 +221,8 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         double maxHorizontalMovementPerTick = calculateMaxHorizontalMovementPerTick.get();
         double maxHorizontalMomentumPerTick = Math.max(maxHorizontalMovementPerTick * 5.0D, 4.2D);
 
-//        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09) {
-//            System.out.println(maxHorizontalMovementPerTick + " - " + maxHorizontalMomentumPerTick);
-//        }
-
         double l = Math.min(maxHorizontalMomentumPerTick, velocity.horizontalLength());
         this.setVelocity(new Vec3d(l * h / j, velocity.y, l * i / j));
-
-
-//        if (this.hasPassengers() && this.getVelocity().horizontalLength() > 0.09 && this.world.getServer() != null && this.world.getServer().getTicks() % 3 == 0) {
-//            System.out.println("Momentum: " + (int) this.getX() + " -> " + this.getVelocity().horizontalLength() + " m/t");
-//        }
 
         Entity entity = this.getFirstPassenger();
         if (entity instanceof PlayerEntity) {
