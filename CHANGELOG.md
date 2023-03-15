@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2023-04-06
+- Vanilla parity: When falling down after rail on a cliff the behaviour is now vanilla, that means you can now fall down from a cliff to a perpendicular rail track.
+- A little more slowdown before descending rails. Due to the vanilla parity you now start descending with 8m/s instead of 9.2m/s
+- A little more slowdown before detector / activator rails. On and directly before detector/activator rails you also move with 8m/s instead of 9.2m/s now. 
+- Mod Compatibility: We only overwrite the moveOnRail function now when there is actually a LivingEntity riding the cart
+- (technical) Mixin is targeting AbstractMinecartEntity again so we can inject and cancel the overwrite
+- Built for Minecraft 1.19.4
+
 ## [2.0.2] - 2023-03-15
 - Starting with this version only mc 1.19+ receives mod updates (2.0.1 is very stable for mc 1.18 and 1.17)
 - (technical) Refactored mixin to target MinecartEntity directly instead of AbstractMinecartEntity, therefore potentially increasing compatibility to other mods even more

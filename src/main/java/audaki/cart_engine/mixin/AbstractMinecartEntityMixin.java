@@ -1,6 +1,5 @@
 package audaki.cart_engine.mixin;
 
-import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.AbstractRailBlock;
 import net.minecraft.block.BlockState;
@@ -9,62 +8,84 @@ import net.minecraft.block.PoweredRailBlock;
 import net.minecraft.block.enums.RailShape;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
+import net.minecraft.entity.vehicle.AbstractMinecartEntity.Type;
 import net.minecraft.entity.vehicle.MinecartEntity;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-@Mixin(value = MinecartEntity.class, priority = 500)
-public abstract class MinecartEntityMixin extends AbstractMinecartEntity {
-    public MinecartEntityMixin(EntityType<?> type, World world) {
+@Mixin(AbstractMinecartEntity.class) // lower value, higher priority - apply first so other mods can still mixin
+public abstract class AbstractMinecartEntityMixin extends Entity {
+    public AbstractMinecartEntityMixin(EntityType<?> type, World world) {
         super(type, world);
     }
 
-    private static final Map<RailShape, Pair<Vec3i, Vec3i>> ADJACENT_RAIL_POSITIONS_BY_SHAPE;
+    @Shadow
+    protected abstract boolean willHitBlockAt(BlockPos pos);
 
-    static {
-        ADJACENT_RAIL_POSITIONS_BY_SHAPE = (Map) Util.make(Maps.newEnumMap(RailShape.class), (map) -> {
-            Vec3i vec3i = Direction.WEST.getVector();
-            Vec3i vec3i2 = Direction.EAST.getVector();
-            Vec3i vec3i3 = Direction.NORTH.getVector();
-            Vec3i vec3i4 = Direction.SOUTH.getVector();
-            Vec3i vec3i5 = vec3i.down();
-            Vec3i vec3i6 = vec3i2.down();
-            Vec3i vec3i7 = vec3i3.down();
-            Vec3i vec3i8 = vec3i4.down();
-            map.put(RailShape.NORTH_SOUTH, Pair.of(vec3i3, vec3i4));
-            map.put(RailShape.EAST_WEST, Pair.of(vec3i, vec3i2));
-            map.put(RailShape.ASCENDING_EAST, Pair.of(vec3i5, vec3i2));
-            map.put(RailShape.ASCENDING_WEST, Pair.of(vec3i, vec3i6));
-            map.put(RailShape.ASCENDING_NORTH, Pair.of(vec3i3, vec3i8));
-            map.put(RailShape.ASCENDING_SOUTH, Pair.of(vec3i7, vec3i4));
-            map.put(RailShape.SOUTH_EAST, Pair.of(vec3i4, vec3i2));
-            map.put(RailShape.SOUTH_WEST, Pair.of(vec3i4, vec3i));
-            map.put(RailShape.NORTH_WEST, Pair.of(vec3i3, vec3i));
-            map.put(RailShape.NORTH_EAST, Pair.of(vec3i3, vec3i2));
-        });
-    }
+    @Shadow
+    public abstract Vec3d snapPositionToRail(double x, double y, double z);
 
-    private boolean willHitBlockAt(BlockPos pos) {
-        return this.world.getBlockState(pos).isSolidBlock(this.world, pos);
-    }
+    @Shadow
+    protected abstract void applySlowdown();
 
+    @Shadow
+    protected abstract double getMaxSpeed();
+
+    @Shadow
+    protected abstract Type getMinecartType();
+
+    @Shadow
     private static Pair<Vec3i, Vec3i> getAdjacentRailPositionsByShape(RailShape shape) {
-        return (Pair)ADJACENT_RAIL_POSITIONS_BY_SHAPE.get(shape);
+        return Pair.of(Direction.NORTH.getVector(), Direction.SOUTH.getVector());
     }
 
-    public void moveOnRail(BlockPos pos, BlockState state) {
+    private static boolean isEligibleFastRail(BlockState state) {
+        return state.isOf(Blocks.RAIL) || (state.isOf(Blocks.POWERED_RAIL) && state.get(PoweredRailBlock.POWERED));
+    }
+
+    private static RailShape getRailShape(BlockState state) {
+        if (!(state.getBlock() instanceof AbstractRailBlock railBlock))
+            throw new IllegalArgumentException("No rail shape found");
+
+        return state.get(railBlock.getShapeProperty());
+    }
+
+    @Inject(at = @At("HEAD"), method = "moveOnRail", cancellable = true)
+    protected void moveOnRailOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
+
+        // We only change logic for rideable minecarts so we don't break hopper/chest minecart creations
+        if (this.getMinecartType() != Type.RIDEABLE) {
+            return;
+        }
+
+        // We only change logic when the minecart is currently being ridden by a living entity (player/villager/mob)
+        boolean hasLivingRider = this.getFirstPassenger() instanceof LivingEntity;
+        if (!hasLivingRider) {
+            return;
+        }
+
+        this.modifiedMoveOnRail(pos, state);
+        ci.cancel();
+    }
+
+    protected void modifiedMoveOnRail(BlockPos pos, BlockState state) {
         this.onLanding();
         double d = this.getX();
         double e = this.getY();
@@ -86,7 +107,7 @@ public abstract class MinecartEntityMixin extends AbstractMinecartEntity {
         }
 
         Vec3d velocity = this.getVelocity();
-        RailShape railShape = state.get(((AbstractRailBlock) state.getBlock()).getShapeProperty());
+        RailShape railShape = getRailShape(state);
         switch (railShape) {
             case ASCENDING_EAST -> {
                 this.setVelocity(velocity.add(-g, 0.0D, 0.0D));
@@ -106,6 +127,7 @@ public abstract class MinecartEntityMixin extends AbstractMinecartEntity {
             }
         }
 
+
         velocity = this.getVelocity();
         Pair<Vec3i, Vec3i> adjacentRailPositions = getAdjacentRailPositionsByShape(railShape);
         Vec3i adjacentRail1RelPos = adjacentRailPositions.getFirst();
@@ -124,7 +146,6 @@ public abstract class MinecartEntityMixin extends AbstractMinecartEntity {
         double horizontalMomentumPerTick = this.getVelocity().horizontalLength();
 
         Supplier<Double> calculateMaxHorizontalMovementPerTick = () -> {
-            final double fallbackSpeedFactor = 1.15D;
             double fallback = this.getMaxSpeed();
 
             if (!this.hasPassengers())
@@ -133,14 +154,23 @@ public abstract class MinecartEntityMixin extends AbstractMinecartEntity {
             if (horizontalMomentumPerTick < vanillaMaxHorizontalMovementPerTick)
                 return fallback;
 
+            if (!isEligibleFastRail(state))
+                return fallback;
+
+            for (Vec3i directlyAdjDiff: List.of(adjacentRailPositions.getFirst(), adjacentRailPositions.getSecond())) {
+                BlockPos directlyAdjPos = pos.add(directlyAdjDiff);
+                BlockState directlyAdjState = this.world.getBlockState(directlyAdjPos);
+
+                if (!isEligibleFastRail(directlyAdjState))
+                    return fallback;
+            }
+
+            final double fallbackSpeedFactor = 1.15D;
+            // Allow faster fallback speed when there is rail around the cart, but we have rail shape changes
             fallback *= fallbackSpeedFactor;
 
             boolean hasEligibleShape = railShape == RailShape.NORTH_SOUTH || railShape == RailShape.EAST_WEST;
             if (!hasEligibleShape)
-                return fallback;
-
-            boolean hasEligibleType = state.isOf(Blocks.RAIL) || (state.isOf(Blocks.POWERED_RAIL) && state.get(PoweredRailBlock.POWERED));
-            if (!hasEligibleType)
                 return fallback;
 
             AtomicInteger eligibleNeighbors = new AtomicInteger();
@@ -148,44 +178,32 @@ public abstract class MinecartEntityMixin extends AbstractMinecartEntity {
             HashSet<BlockPos> checkedPositions = new HashSet<>();
             checkedPositions.add(pos);
 
-            BiFunction<BlockPos, RailShape, ArrayList<Pair<BlockPos, RailShape>>> checkNeighbors = (cPos, cRailShape) -> {
-                Pair<Vec3i, Vec3i> cAdjPosDiff = getAdjacentRailPositionsByShape(cRailShape);
+
+            BiFunction<BlockPos, RailShape, ArrayList<Pair<BlockPos, RailShape>>> checkNeighbors = (checkPos, checkRailShape) -> {
+
+                Pair<Vec3i, Vec3i> adjDiffPair = getAdjacentRailPositionsByShape(checkRailShape);
+
                 ArrayList<Pair<BlockPos, RailShape>> newNeighbors = new ArrayList<>();
 
-                BlockPos n1Pos = cPos.add(cAdjPosDiff.getFirst());
+                for (Vec3i adjDiff: List.of(adjDiffPair.getFirst(), adjDiffPair.getSecond())) {
+                    BlockPos nborPos = checkPos.add(adjDiff);
 
-                if (!checkedPositions.contains(n1Pos)) {
+                    if (checkedPositions.contains(nborPos))
+                        continue;
 
-                    BlockState n1State = this.world.getBlockState(n1Pos);
-                    boolean n1HasEligibleType = n1State.isOf(Blocks.RAIL) || (n1State.isOf(Blocks.POWERED_RAIL) && n1State.get(PoweredRailBlock.POWERED));
-                    if (!n1HasEligibleType)
+                    BlockState nborState = this.world.getBlockState(nborPos);
+                    if (!isEligibleFastRail(nborState))
                         return new ArrayList<>();
 
-                    RailShape n1RailShape = n1State.get(((AbstractRailBlock) n1State.getBlock()).getShapeProperty());
-                    if (n1RailShape != railShape)
+                    RailShape nborShape = getRailShape(nborState);
+                    if (nborShape != railShape)
                         return new ArrayList<>();
 
-                    checkedPositions.add(n1Pos);
+                    checkedPositions.add(nborPos);
                     eligibleNeighbors.incrementAndGet();
-                    newNeighbors.add(Pair.of(n1Pos, n1RailShape));
-                }
-
-                BlockPos n2Pos = cPos.add(cAdjPosDiff.getSecond());
-                if (!checkedPositions.contains(n2Pos)) {
-
-                    BlockState n2State = this.world.getBlockState(n2Pos);
-                    boolean n2HasEligibleType = n2State.isOf(Blocks.RAIL) || (n2State.isOf(Blocks.POWERED_RAIL) && n2State.get(PoweredRailBlock.POWERED));
-                    if (!n2HasEligibleType)
-                        return new ArrayList<>();
-
-                    RailShape n2RailShape = n2State.get(((AbstractRailBlock) n2State.getBlock()).getShapeProperty());
-
-                    if (n2RailShape != railShape)
-                        return new ArrayList<>();
-
-                    checkedPositions.add(n2Pos);
-                    eligibleNeighbors.incrementAndGet();
-                    newNeighbors.add(Pair.of(n2Pos, n2RailShape));
+                    // Adding the neighbor rail shape currently has no use, since we abort on rail shape change anyway
+                    // Code stays as is for now so we can differentiate between types of rail shape changes later
+                    newNeighbors.add(Pair.of(nborPos, nborShape));
                 }
 
                 return newNeighbors;
@@ -309,9 +327,9 @@ public abstract class MinecartEntityMixin extends AbstractMinecartEntity {
             vec3d7 = this.getVelocity();
             af = vec3d7.horizontalLength();
             this.setVelocity(
-                    af * MathHelper.clamp((double) (ac - pos.getX()), -1.0D, 1.0D),
+                    af * MathHelper.clamp(ac - pos.getX(), -1.0D, 1.0D),
                     vec3d7.y,
-                    af * MathHelper.clamp((double) (ad - pos.getZ()), -1.0D, 1.0D));
+                    af * MathHelper.clamp(ad - pos.getZ(), -1.0D, 1.0D));
         }
 
         if (onPoweredRail) {
