@@ -5,9 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.2] - 2023-xx-xx
+## [2.0.2] - 2023-03-15
 - Starting with this version only mc 1.19+ receives mod updates (2.0.1 is very stable for mc 1.18 and 1.17)
 - (technical) Refactored mixin to target MinecartEntity directly instead of AbstractMinecartEntity, therefore potentially increasing compatibility to other mods even more
+- Built for Minecraft 1.19.4
 
 ## [2.0.1] - 2023-02-20
 - Enhance compatibility for redstone chest/hopper minecart constructions (They are 100% vanilla now. The hook was changed to only apply to rideable minecarts)
