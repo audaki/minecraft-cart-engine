@@ -13,11 +13,9 @@ import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity.Type;
-import net.minecraft.entity.vehicle.MinecartEntity;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -159,7 +157,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
             for (Vec3i directlyAdjDiff: List.of(adjacentRailPositions.getFirst(), adjacentRailPositions.getSecond())) {
                 BlockPos directlyAdjPos = pos.add(directlyAdjDiff);
-                BlockState directlyAdjState = this.world.getBlockState(directlyAdjPos);
+                BlockState directlyAdjState = this.getWorld().getBlockState(directlyAdjPos);
 
                 if (!isEligibleFastRail(directlyAdjState))
                     return fallback;
@@ -191,7 +189,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
                     if (checkedPositions.contains(nborPos))
                         continue;
 
-                    BlockState nborState = this.world.getBlockState(nborPos);
+                    BlockState nborState = this.getWorld().getBlockState(nborPos);
                     if (!isEligibleFastRail(nborState))
                         return new ArrayList<>();
 

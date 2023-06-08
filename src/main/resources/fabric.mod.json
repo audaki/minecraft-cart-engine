@@ -9,7 +9,7 @@
   "authors": [{
     "name": "Audaki",
     "contact": {
-      "twitter": "https://twitter.com/EarthlingAudaki"
+      "twitter": "https://twitter.com/audaki_ra"
     }
   }],
 
@@ -29,7 +29,7 @@
   ],
   "depends": {
     "fabricloader": "*",
-    "minecraft": ">=1.19",
+    "minecraft": ">=1.20",
     "java": ">=17"
   },
   "suggests": {
@@ -39,7 +39,7 @@
     "modmenu": {
       "links": {
         "modmenu.wiki": "https://github.com/audaki/minecraft-cart-engine/wiki",
-        "modmenu.twitter": "https://twitter.com/EarthlingAudaki",
+        "modmenu.twitter": "https://twitter.com/audaki_ra",
         "modmenu.curseforge": "https://www.curseforge.com/minecraft/mc-mods/audaki-cart-engine"
       }
     }
