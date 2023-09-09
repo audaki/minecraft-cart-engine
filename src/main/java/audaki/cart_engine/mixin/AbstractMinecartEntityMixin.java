@@ -1,5 +1,7 @@
 package audaki.cart_engine.mixin;
 
+import audaki.cart_engine.compat.Mods;
+import com.github.vini2003.linkart.api.LinkableMinecart;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.AbstractRailBlock;
 import net.minecraft.block.BlockState;
@@ -32,6 +34,12 @@ import java.util.function.Supplier;
 
 @Mixin(AbstractMinecartEntity.class) // lower value, higher priority - apply first so other mods can still mixin
 public abstract class AbstractMinecartEntityMixin extends Entity {
+    // Used to smooth out acceleration
+    private static double SAFE_SPEEDUP_THRESHOLD = 0.4;
+    private static double SMOOTH_SPEEDUP_AMOUNT = 0.2;
+    public double lastMovementLength = 0.0D;  // movement length last tick (only use if doSmoothing == true)
+    private boolean doSmoothing = false;  // true if lastMovementLength was set inside modifiedMoveOnRail
+
     public AbstractMinecartEntityMixin(EntityType<?> type, World world) {
         super(type, world);
     }
@@ -70,15 +78,25 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
     @Inject(at = @At("HEAD"), method = "moveOnRail", cancellable = true)
     protected void moveOnRailOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
 
-        // We only change logic for rideable minecarts so we don't break hopper/chest minecart creations
-        if (this.getMinecartType() != Type.RIDEABLE) {
-            return;
-        }
+        // We always change logic if the minecart is following another minecart (Linkart compatibility)
+        boolean isFollowing = Mods.LINKART.isLoaded && Mods.LINKART.runIfInstalled(() -> () -> {
+            LinkableMinecart minecart = (LinkableMinecart) this;
+            return minecart.linkart$getFollowing() != null;
+        }).get();
+        if (!isFollowing) {
 
-        // We only change logic when the minecart is currently being ridden by a living entity (player/villager/mob)
-        boolean hasLivingRider = this.getFirstPassenger() instanceof LivingEntity;
-        if (!hasLivingRider) {
-            return;
+            // We only change logic for rideable minecarts so we don't break hopper/chest minecart creations
+            if (this.getMinecartType() != Type.RIDEABLE) {
+                doSmoothing = false;
+                return;
+            }
+
+            // We only change logic when the minecart is currently being ridden by a living entity (player/villager/mob)
+            boolean hasLivingRider = this.getFirstPassenger() instanceof LivingEntity;
+            if (!hasLivingRider) {
+                doSmoothing = false;
+                return;
+            }
         }
 
         this.modifiedMoveOnRail(pos, state);
@@ -147,9 +165,6 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
         Supplier<Double> calculateMaxHorizontalMovementPerTick = () -> {
             double fallback = this.getMaxSpeed();
-
-            if (!this.hasPassengers())
-                return fallback;
 
             if (horizontalMomentumPerTick < vanillaMaxHorizontalMovementPerTick)
                 return fallback;
@@ -291,12 +306,44 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         d = p + h * x;
         f = q + i * x;
         this.setPosition(d, e, f);
-        v = this.hasPassengers() ? 0.75D : 1.0D;
+        v = 0.75D;
 
         w = maxHorizontalMovementPerTick;
 
         velocity = this.getVelocity();
         Vec3d movement = new Vec3d(MathHelper.clamp(v * velocity.x, -w, w), 0.0D, MathHelper.clamp(v * velocity.z, -w, w));
+
+        // Ensure acceleration is capped for leading minecarts only (so the following ones can match their speeds)
+        if (Mods.LINKART.isLoaded) {
+            final double targetMovementLength = movement.length();
+            double smoothedMovementLength = Mods.LINKART.runIfInstalled(() -> () -> {
+                LinkableMinecart minecart = (LinkableMinecart) this;
+                boolean isLeading = (minecart.linkart$getFollowing() == null && minecart.linkart$getFollower() != null);
+                // If we're the leading minecart and we have a valid lastMovementLength
+                if (isLeading && this.doSmoothing)
+                    // If we're speeding up
+                    if (this.lastMovementLength < targetMovementLength)
+                        // If we're past the safe speedup threshold
+                        if (targetMovementLength > SAFE_SPEEDUP_THRESHOLD) {
+                            AbstractMinecartEntity follower = minecart.linkart$getFollower();
+                            // If any following minecarts are not travelling at our speed
+                            while (follower != null) {
+                                double followerLastMovementLength = ((AbstractMinecartEntityMixin) (Object) follower).lastMovementLength;
+                                if (followerLastMovementLength < this.lastMovementLength - 0.02 || followerLastMovementLength > this.lastMovementLength + 0.07)
+                                    // Maintain same speed
+                                    return lastMovementLength / targetMovementLength;
+                                follower = ((LinkableMinecart) follower).linkart$getFollower();
+                            }
+                            // Increase our speed
+                            return Math.min(Math.max(SAFE_SPEEDUP_THRESHOLD, lastMovementLength + SMOOTH_SPEEDUP_AMOUNT), targetMovementLength) / targetMovementLength;
+
+                        }
+                return 1.0D;
+            }).get();
+            movement = movement.multiply(smoothedMovementLength);
+            this.lastMovementLength = movement.length();
+            this.doSmoothing = true;
+        }
 
         this.move(MovementType.SELF, movement);
 
@@ -338,30 +385,25 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
             final double basisAccelerationPerTick = 0.021D;
             if (momentum > 0.01D) {
 
-                if (this.hasPassengers()) {
-                    // Based on a 10 ticks per second basis spent per powered block we calculate a fair acceleration per tick
-                    // due to spending less ticks per powered block on higher speeds (and even skipping blocks)
-                    final double basisTicksPerSecond = 10.0D;
-                    // Tps = Ticks per second
-                    final double tickMovementForBasisTps = 1.0D / basisTicksPerSecond;
-                    final double maxSkippedBlocksToConsider = 3.0D;
+                // Based on a 10 ticks per second basis spent per powered block we calculate a fair acceleration per tick
+                // due to spending less ticks per powered block on higher speeds (and even skipping blocks)
+                final double basisTicksPerSecond = 10.0D;
+                // Tps = Ticks per second
+                final double tickMovementForBasisTps = 1.0D / basisTicksPerSecond;
+                final double maxSkippedBlocksToConsider = 3.0D;
 
 
-                    double acceleration = basisAccelerationPerTick;
-                    final double distanceMovedHorizontally = movement.horizontalLength();
+                double acceleration = basisAccelerationPerTick;
+                final double distanceMovedHorizontally = movement.horizontalLength();
 
-                    if (distanceMovedHorizontally > tickMovementForBasisTps) {
-                        acceleration *= Math.min((1.0D + maxSkippedBlocksToConsider) * basisTicksPerSecond, distanceMovedHorizontally / tickMovementForBasisTps);
+                if (distanceMovedHorizontally > tickMovementForBasisTps) {
+                    acceleration *= Math.min((1.0D + maxSkippedBlocksToConsider) * basisTicksPerSecond, distanceMovedHorizontally / tickMovementForBasisTps);
 
-                        // Add progressively slower (or faster) acceleration for higher speeds;
-                        double highspeedFactor = 1.0D + MathHelper.clamp(-0.45D * (distanceMovedHorizontally / tickMovementForBasisTps / basisTicksPerSecond), -0.7D, 2.0D);
-                        acceleration *= highspeedFactor;
-                    }
-                    this.setVelocity(vec3d7.add(acceleration * (vec3d7.x / momentum), 0.0D, acceleration * (vec3d7.z / momentum)));
+                    // Add progressively slower (or faster) acceleration for higher speeds;
+                    double highspeedFactor = 1.0D + MathHelper.clamp(-0.45D * (distanceMovedHorizontally / tickMovementForBasisTps / basisTicksPerSecond), -0.7D, 2.0D);
+                    acceleration *= highspeedFactor;
                 }
-                else {
-                    this.setVelocity(vec3d7.add(vec3d7.x / momentum * 0.06D, 0.0D, vec3d7.z / momentum * 0.06D));
-                }
+                this.setVelocity(vec3d7.add(acceleration * (vec3d7.x / momentum), 0.0D, acceleration * (vec3d7.z / momentum)));
 
 
             } else {
