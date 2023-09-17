@@ -9,26 +9,11 @@ archivesBaseName = "${project.archives_base_name}--fabric-mc${project.minecraft_
 version = project.mod_version
 group = project.maven_group
 
-repositories {
-	exclusiveContent {
-		forRepository {
-			maven {
-				name = "Modrinth"
-				url = "https://api.modrinth.com/maven"
-			}
-		}
-		filter {
-			includeGroup "maven.modrinth"
-		}
-	}
-}
-
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modCompileOnly "maven.modrinth:linkart:5.2.0-1.19.3"
 }
 
 processResources {
