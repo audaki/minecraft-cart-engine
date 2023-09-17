@@ -24,6 +24,11 @@
   "icon": "assets/audaki_cart_engine/icon.png",
 
   "environment": "*",
+  "entrypoints": {
+    "main": [
+      "audaki.cart_engine.AudakiCartEngine"
+    ]
+  },
   "mixins": [
     "audaki_cart_engine.mixins.json"
   ],

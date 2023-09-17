@@ -1,5 +1,6 @@
 package audaki.cart_engine.mixin;
 
+import audaki.cart_engine.AudakiCartEngine;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.AbstractRailBlock;
 import net.minecraft.block.BlockState;
@@ -28,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Mixin(AbstractMinecartEntity.class) // lower value, higher priority - apply first so other mods can still mixin
@@ -69,16 +71,34 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
 
     @Inject(at = @At("HEAD"), method = "moveOnRail", cancellable = true)
     protected void moveOnRailOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
+        // Loop through checks registered by other mods
+        Boolean shouldUseModifiedEngine = null;
+        for (Function<AbstractMinecartEntity, Boolean> cartChecker : AudakiCartEngine.CART_CHECK_MODIFIED_ENGINE) {
+            shouldUseModifiedEngine = cartChecker.apply((AbstractMinecartEntity) (Object) this);
+            // Check if the modified engine is required/suppressed
+            if (shouldUseModifiedEngine != null) {
+                break;
+            }
+        }
 
-        // We only change logic for rideable minecarts so we don't break hopper/chest minecart creations
-        if (this.getMinecartType() != Type.RIDEABLE) {
+        // Check if modified engine was suppressed
+        if (!shouldUseModifiedEngine) {
             return;
         }
 
-        // We only change logic when the minecart is currently being ridden by a living entity (player/villager/mob)
-        boolean hasLivingRider = this.getFirstPassenger() instanceof LivingEntity;
-        if (!hasLivingRider) {
-            return;
+        // If no mods required modified engine, we do our own logic here
+        if (shouldUseModifiedEngine == null) {
+
+            // We only change logic for rideable minecarts so we don't break hopper/chest minecart creations
+            if (this.getMinecartType() != Type.RIDEABLE) {
+                return;
+            }
+
+            // We only change logic when the minecart is currently being ridden by a living entity (player/villager/mob)
+            boolean hasLivingRider = this.getFirstPassenger() instanceof LivingEntity;
+            if (!hasLivingRider) {
+                return;
+            }
         }
 
         this.modifiedMoveOnRail(pos, state);
