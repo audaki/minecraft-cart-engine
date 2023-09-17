@@ -148,9 +148,6 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         Supplier<Double> calculateMaxHorizontalMovementPerTick = () -> {
             double fallback = this.getMaxSpeed();
 
-            if (!this.hasPassengers())
-                return fallback;
-
             if (horizontalMomentumPerTick < vanillaMaxHorizontalMovementPerTick)
                 return fallback;
 
@@ -291,7 +288,7 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
         d = p + h * x;
         f = q + i * x;
         this.setPosition(d, e, f);
-        v = this.hasPassengers() ? 0.75D : 1.0D;
+        v = 1.0D;
 
         w = maxHorizontalMovementPerTick;
 
@@ -338,30 +335,25 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
             final double basisAccelerationPerTick = 0.021D;
             if (momentum > 0.01D) {
 
-                if (this.hasPassengers()) {
-                    // Based on a 10 ticks per second basis spent per powered block we calculate a fair acceleration per tick
-                    // due to spending less ticks per powered block on higher speeds (and even skipping blocks)
-                    final double basisTicksPerSecond = 10.0D;
-                    // Tps = Ticks per second
-                    final double tickMovementForBasisTps = 1.0D / basisTicksPerSecond;
-                    final double maxSkippedBlocksToConsider = 3.0D;
+                // Based on a 10 ticks per second basis spent per powered block we calculate a fair acceleration per tick
+                // due to spending less ticks per powered block on higher speeds (and even skipping blocks)
+                final double basisTicksPerSecond = 10.0D;
+                // Tps = Ticks per second
+                final double tickMovementForBasisTps = 1.0D / basisTicksPerSecond;
+                final double maxSkippedBlocksToConsider = 3.0D;
 
 
-                    double acceleration = basisAccelerationPerTick;
-                    final double distanceMovedHorizontally = movement.horizontalLength();
+                double acceleration = basisAccelerationPerTick;
+                final double distanceMovedHorizontally = movement.horizontalLength();
 
-                    if (distanceMovedHorizontally > tickMovementForBasisTps) {
-                        acceleration *= Math.min((1.0D + maxSkippedBlocksToConsider) * basisTicksPerSecond, distanceMovedHorizontally / tickMovementForBasisTps);
+                if (distanceMovedHorizontally > tickMovementForBasisTps) {
+                    acceleration *= Math.min((1.0D + maxSkippedBlocksToConsider) * basisTicksPerSecond, distanceMovedHorizontally / tickMovementForBasisTps);
 
-                        // Add progressively slower (or faster) acceleration for higher speeds;
-                        double highspeedFactor = 1.0D + MathHelper.clamp(-0.45D * (distanceMovedHorizontally / tickMovementForBasisTps / basisTicksPerSecond), -0.7D, 2.0D);
-                        acceleration *= highspeedFactor;
-                    }
-                    this.setVelocity(vec3d7.add(acceleration * (vec3d7.x / momentum), 0.0D, acceleration * (vec3d7.z / momentum)));
+                    // Add progressively slower (or faster) acceleration for higher speeds;
+                    double highspeedFactor = 1.0D + MathHelper.clamp(-0.45D * (distanceMovedHorizontally / tickMovementForBasisTps / basisTicksPerSecond), -0.7D, 2.0D);
+                    acceleration *= highspeedFactor;
                 }
-                else {
-                    this.setVelocity(vec3d7.add(vec3d7.x / momentum * 0.06D, 0.0D, vec3d7.z / momentum * 0.06D));
-                }
+                this.setVelocity(vec3d7.add(acceleration * (vec3d7.x / momentum), 0.0D, acceleration * (vec3d7.z / momentum)));
 
 
             } else {
