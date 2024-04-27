@@ -1,13 +1,17 @@
 plugins {
-	id 'fabric-loom' version '1.0-SNAPSHOT'
+	id 'fabric-loom' version '1.6-SNAPSHOT'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
 
-archivesBaseName = "${project.archives_base_name}"
-version = project.mod_version
-group = project.maven_group
+base {
+	archivesName = "${project.archives_base_name}"
+	version = project.mod_version
+	group = project.maven_group
+}
 
 dependencies {
 	// To change the versions see the gradle.properties file
