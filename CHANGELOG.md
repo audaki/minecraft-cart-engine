@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2024-05-18
+- Allow full speed on diagonals
+- Allow full speed on ascensions and descensions
+- Much faster Slowdown/Re-Speedup around direction changes
+- Partial Rewrite of the engine
+- (use official loom mappings)
+- (Built for Minecraft 1.20.6+)
+
 ## [2.0.7] - 2024-04-27
 - Updated for Minecraft 1.20.5+
 - Updated for Java 21+
