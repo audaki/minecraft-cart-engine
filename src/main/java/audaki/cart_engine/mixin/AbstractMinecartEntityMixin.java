@@ -95,7 +95,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
         final double tps = 20.;
         final double maxSpeed = 34. / tps;
         final double maxMomentum = maxSpeed * 5.;
-        final double vanillaMaxSpeedPerTick = 0.4D;
+        final double vanillaMaxSpeed = 8. / tps;
 
         this.resetFallDistance();
         double thisX = this.getX();
@@ -191,6 +191,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
 
 
         BlockPos exitPos;
+        boolean exitIsBrake;
         {
             BlockPos pos = isAscending ? startPos.above() : startPos;
             BlockPos exitPos1 = pos.offset(exitRelPos1);
@@ -203,6 +204,8 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
             }
             Vec3 momentumPos = pos.getCenter().add(this.getDeltaMovement()).multiply(1, 0, 1);
             exitPos = momentumPos.distanceTo(exitPos1.getCenter().multiply(1, 0, 1)) < momentumPos.distanceTo(exitPos2.getCenter().multiply(1, 0, 1)) ? exitPos1 : exitPos2;
+            BlockState exitState = this.level().getBlockState(exitPos);
+            exitIsBrake = (exitState.is(Blocks.POWERED_RAIL) && !exitState.getValue(PoweredRailBlock.POWERED));
         }
 
         ArrayList<BlockPos> adjRailPositions = new ArrayList<>();
@@ -213,7 +216,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
             if (!this.isVehicle())
                 return fallback;
 
-            if (this.getDeltaMovement().horizontalDistance() < vanillaMaxSpeedPerTick)
+            if (this.getDeltaMovement().horizontalDistance() < vanillaMaxSpeed)
                 return fallback;
 
             if (!isEligibleFastRail(state))
@@ -289,7 +292,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
             }
 
             int railCountEachDirection = adjRailPositions.size() / 2;
-            final double dynamicCutoffSpeedPerSec = 20.;
+            final double cutoffSpeedPerSec = 20.;
             switch (railCountEachDirection) {
                 case 0:
                 case 1:
@@ -297,12 +300,12 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
                 case 2:
                     return 12. / tps;
                 case 3:
-                    return dynamicCutoffSpeedPerSec / tps;
+                    return cutoffSpeedPerSec / tps;
                 default:
             }
 
             int railCountPastBegin = railCountEachDirection - cutoffPoint;
-            return (dynamicCutoffSpeedPerSec + ((20. / checkFactor) * railCountPastBegin)) / tps;
+            return (cutoffSpeedPerSec + ((20. / checkFactor) * railCountPastBegin)) / tps;
         };
 
         double maxSpeedForThisTick = Math.min(calculateMaxSpeedForThisTick.get(), maxSpeed);
@@ -322,15 +325,38 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
             }
         }
 
+
+        /*
+        Braking Algorithm
+        Original:  
+            double o;
+            if (bl2) {
+                o = this.getDeltaMovement().horizontalDistance();
+                if (o < 0.03) {
+                    this.setDeltaMovement(Vec3.ZERO);
+                } else {
+                    this.setDeltaMovement(this.getDeltaMovement().multiply(0.5, 0.0, 0.5));
+                }
+            }
+         */
         if (onBrakeRail) {
+            momentum = this.getDeltaMovement();
+            horizontalMomentum = momentum.horizontalDistance();
+
             if (horizontalMomentum < 0.03D) {
                 this.setDeltaMovement(Vec3.ZERO);
             } else {
-                double brakeFactor = 0.5D;
 
-                if (horizontalMomentum > 4.0D * vanillaMaxSpeedPerTick) {
-                    brakeFactor = Math.pow(brakeFactor, 1.0D + ((horizontalMomentum - 3.99D * vanillaMaxSpeedPerTick) / 1.2D));
+                if (horizontalMomentum > vanillaMaxSpeed) {
+                    double ratioToSlowdown = vanillaMaxSpeed / horizontalMomentum;
+                    this.setDeltaMovement(momentum.multiply(ratioToSlowdown, 1., ratioToSlowdown));
                 }
+                
+                double brakeFactor = 0.6;
+
+//                if (horizontalMomentum > 4.0D * vanillaMaxSpeed) {
+//                    brakeFactor = Math.pow(brakeFactor, 1.0D + ((horizontalMomentum - 3.99D * vanillaMaxSpeed) / 1.2D));
+//                }
 
                 this.setDeltaMovement(this.getDeltaMovement().multiply(brakeFactor, 0.0D, brakeFactor));
             }
@@ -404,7 +430,20 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
 //        }
         }
 
+
+
         this.applyNaturalSlowdown();
+        
+        if (exitIsBrake) {
+            momentum = this.getDeltaMovement();
+            horizontalMomentum = momentum.horizontalDistance();
+            if (horizontalMomentum > vanillaMaxSpeed) {
+                double ratioToSlowdown = vanillaMaxSpeed / horizontalMomentum;
+                this.setDeltaMovement(momentum.multiply(ratioToSlowdown, 1., ratioToSlowdown));
+            }
+        }
+
+        // Todo: 100% understand this vanilla code block & rename variables
         Vec3 vec3d4 = this.getPos(this.getX(), this.getY(), this.getZ());
         if (vec3d4 != null && vec3 != null) {
             double aa = (vec3.y - vec3d4.y) * 0.05D;
@@ -417,6 +456,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
             this.setPos(this.getX(), vec3d4.y, this.getZ());
         }
 
+        // Todo: 100% understand this vanilla code block & rename variables
         int ac = Mth.floor(this.getX());
         int ad = Mth.floor(this.getZ());
         if (ac != startPos.getX() || ad != startPos.getZ()) {
@@ -428,6 +468,8 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
                     horizontalMomentum * Mth.clamp(ad - startPos.getZ(), -1.0D, 1.0D));
         }
 
+
+        // Give speedup or kickstart when standing at block + powered rail
         if (onPoweredRail) {
             momentum = this.getDeltaMovement();
             horizontalMomentum = momentum.horizontalDistance();
@@ -435,6 +477,8 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
             if (horizontalMomentum > 0.01D) {
 
                 if (this.isVehicle()) {
+                    // TODO: Rewrite the comment/naming so it makes more sense (very confusing since TPS is 20 and we can only skip 1 block with current speeds)
+
                     // Based on a 10 ticks per second basis spent per powered block we calculate a fair acceleration per tick
                     // due to spending less ticks per powered block on higher speeds (and even skipping blocks)
                     final double basisTicksPerSecond = 10.0D;
