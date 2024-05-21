@@ -430,15 +430,6 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
 
         this.applyNaturalSlowdown();
 
-        if (exitIsAir) {
-            momentum = this.getDeltaMovement();
-            horizontalMomentum = momentum.horizontalDistance();
-            if (horizontalMomentum > vanillaMaxMomentum) {
-                double ratioToSlowdown = vanillaMaxMomentum / horizontalMomentum;
-                this.setDeltaMovement(momentum.multiply(ratioToSlowdown, 1., ratioToSlowdown));
-            }
-        }
-
         // Todo: 100% understand this vanilla code block & rename variables
         Vec3 vec3d4 = this.getPos(this.getX(), this.getY(), this.getZ());
         if (vec3d4 != null && vec3 != null) {
@@ -526,5 +517,15 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
                 this.setDeltaMovement(ah, momentum.y, ai);
             }
         }
+
+        // TODO: Falling is still inconsistent, is it a vanilla inconsistency?
+//        if (exitIsAir) {
+//            momentum = this.getDeltaMovement();
+//            horizontalMomentum = momentum.horizontalDistance();
+//            if (horizontalMomentum > vanillaMaxSpeed) {
+//                double ratioToSlowdown = vanillaMaxSpeed / horizontalMomentum;
+//                this.setDeltaMovement(momentum.multiply(ratioToSlowdown, 1., ratioToSlowdown));
+//            }
+//        }
     }
 }

@@ -6,7 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [3.1.0] - 2024-05-20
-- Make jump width after rail cliff like vanilla
 - [!] Improve brakes for ridden carts
 - Brakes now always stop a ridden cart in exactly 1 brake tile
 - Brakes now stop the cart in the 2nd half of the tile
