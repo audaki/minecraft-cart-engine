@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - But this is also a breaking change
 - If you want to slow down your ridden cart, try detector rails
 - If you want more, message me here: https://github.com/audaki/minecraft-cart-engine/issues
-- (Built for Minecraft 1.20.6+)
+- (Built for Minecraft 1.20.3 - 1.20.6+, 1.21+, Java 17 - 22+)
 
 ## [3.0.0] - 2024-05-18
 - Allow full speed on diagonals
