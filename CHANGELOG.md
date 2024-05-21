@@ -6,14 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [3.1.0] - 2024-05-20
-- Improve brakes for ridden carts
-- Brakes now stop the cart around the center point (from 0.47 to 0.97)
-- Brakes now always stop a ridden cart in exactly 1 brake
+- Make jump width after rail cliff like vanilla
+- [!] Improve brakes for ridden carts
+- Brakes now always stop a ridden cart in exactly 1 brake tile
+- Brakes now stop the cart in the 2nd half of the tile
 - Even freestanding brakes do this now
 - The change makes brakes MUCH more consistent
 - This allows building reliable 1-tile stations / cart holders on 1-tile inclines!
 - But this is also a breaking change
-- If you want to just slow down your ridden cart, try detector rails
+- If you want to slow down your ridden cart, try detector rails
 - If you want more, message me here: https://github.com/audaki/minecraft-cart-engine/issues
 - (Built for Minecraft 1.20.6+)
 

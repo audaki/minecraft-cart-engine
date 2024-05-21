@@ -96,6 +96,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
         final double maxSpeed = 34. / tps;
         final double maxMomentum = maxSpeed * 5.;
         final double vanillaMaxSpeed = 8. / tps;
+        final double vanillaMaxMomentum = 40. / tps;
 
         this.resetFallDistance();
         double thisX = this.getX();
@@ -191,7 +192,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
 
 
         BlockPos exitPos;
-        boolean exitIsBrake;
+        boolean exitIsAir;
         {
             BlockPos pos = isAscending ? startPos.above() : startPos;
             BlockPos exitPos1 = pos.offset(exitRelPos1);
@@ -205,7 +206,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
             Vec3 momentumPos = pos.getCenter().add(this.getDeltaMovement()).multiply(1, 0, 1);
             exitPos = momentumPos.distanceTo(exitPos1.getCenter().multiply(1, 0, 1)) < momentumPos.distanceTo(exitPos2.getCenter().multiply(1, 0, 1)) ? exitPos1 : exitPos2;
             BlockState exitState = this.level().getBlockState(exitPos);
-            exitIsBrake = (exitState.is(Blocks.POWERED_RAIL) && !exitState.getValue(PoweredRailBlock.POWERED));
+            exitIsAir = exitState.is(Blocks.AIR);
         }
 
         ArrayList<BlockPos> adjRailPositions = new ArrayList<>();
@@ -343,7 +344,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
             momentum = this.getDeltaMovement();
             horizontalMomentum = momentum.horizontalDistance();
 
-            if (horizontalMomentum < 0.03D) {
+            if (horizontalMomentum < 0.03) {
                 this.setDeltaMovement(Vec3.ZERO);
             } else {
 
@@ -352,13 +353,8 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
                     this.setDeltaMovement(momentum.multiply(ratioToSlowdown, 1., ratioToSlowdown));
                 }
                 
-                double brakeFactor = 0.6;
-
-//                if (horizontalMomentum > 4.0D * vanillaMaxSpeed) {
-//                    brakeFactor = Math.pow(brakeFactor, 1.0D + ((horizontalMomentum - 3.99D * vanillaMaxSpeed) / 1.2D));
-//                }
-
-                this.setDeltaMovement(this.getDeltaMovement().multiply(brakeFactor, 0.0D, brakeFactor));
+                double brakeFactor = 0.59;
+                this.setDeltaMovement(this.getDeltaMovement().multiply(brakeFactor, 0., brakeFactor));
             }
         }
 
@@ -433,12 +429,12 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
 
 
         this.applyNaturalSlowdown();
-        
-        if (exitIsBrake) {
+
+        if (exitIsAir) {
             momentum = this.getDeltaMovement();
             horizontalMomentum = momentum.horizontalDistance();
-            if (horizontalMomentum > vanillaMaxSpeed) {
-                double ratioToSlowdown = vanillaMaxSpeed / horizontalMomentum;
+            if (horizontalMomentum > vanillaMaxMomentum) {
+                double ratioToSlowdown = vanillaMaxMomentum / horizontalMomentum;
                 this.setDeltaMovement(momentum.multiply(ratioToSlowdown, 1., ratioToSlowdown));
             }
         }
