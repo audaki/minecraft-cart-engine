@@ -33,6 +33,6 @@ java {
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archives_base_name}"}
+		rename { "${it}_${project.base.archivesName.get()}" }
 	}
 }
