@@ -98,9 +98,9 @@ public abstract class AbstractMinecartEntityMixin extends Entity {
     protected void modifiedMoveAlongTrack(BlockPos startPos, BlockState state) {
 
         // Minecraft 1.17 - 1.19
-//        Level level = this.level;
+        Level level = this.level;
         // Minecraft 1.20+
-        Level level = this.level();
+//        Level level = this.level();
 
         final double tps = 20.;
         final double maxSpeed = 34. / tps;
