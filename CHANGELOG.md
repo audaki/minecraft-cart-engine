@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] - 2024-05-25
+- Make backwards compatible
+  - from Minecraft 1.21 down to Minecraft 1.17
+  - from Fabric Loader 0.15.11 down to 0.14.20
+
 ## [3.1.0] - 2024-05-20
 - [!] Improve brakes for ridden carts
 - Brakes now always stop a ridden cart in exactly 1 brake tile

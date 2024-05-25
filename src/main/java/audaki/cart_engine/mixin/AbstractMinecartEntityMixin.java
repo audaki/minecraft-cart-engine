@@ -13,7 +13,6 @@ import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.AbstractMinecart.Type;
-import net.minecraft.world.entity.vehicle.VehicleEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -33,8 +32,15 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+/*
+ AbstractMinecart is extending VehicleEntity
+ But this is only available from 1.20.3
+ So we stay with extends Entity for now
+ */
+
 @Mixin(AbstractMinecart.class)
-public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
+public abstract class AbstractMinecartEntityMixin extends Entity {
+    
     public AbstractMinecartEntityMixin(EntityType<?> type, Level level) {
         super(type, level);
     }
@@ -52,7 +58,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
     protected abstract double getMaxSpeed();
 
     @Shadow
-    protected abstract Type getMinecartType();
+    public abstract Type getMinecartType();
 
     @Shadow
     private static Pair<Vec3i, Vec3i> exits(RailShape shape) {
@@ -74,7 +80,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
     @Inject(at = @At("HEAD"), method = "moveAlongTrack", cancellable = true)
     protected void moveAlongTrackOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
 
-        // We only change logic for rideable minecarts so we don't break hopper/chest minecart creations
+        // We only change logic for rideable minecarts, so we don't break hopper/chest minecart creations
         if (this.getMinecartType() != Type.RIDEABLE) {
             return;
         }
@@ -91,13 +97,23 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
 
     protected void modifiedMoveAlongTrack(BlockPos startPos, BlockState state) {
 
+        // Minecraft 1.17 - 1.19
+//        Level level = this.level;
+        // Minecraft 1.20+
+        Level level = this.level();
+
         final double tps = 20.;
         final double maxSpeed = 34. / tps;
         final double maxMomentum = maxSpeed * 5.;
         final double vanillaMaxSpeed = 8. / tps;
         final double vanillaMaxMomentum = 40. / tps;
 
-        this.resetFallDistance();
+        /*
+         From 1.18 resetFallDistance() is used, but for backwards compatibility we copied the code
+         So far (2024-05-25) no different code is executed in that function
+         */
+        this.fallDistance = 0.0F;
+
         double thisX = this.getX();
         double thisY = this.getY();
         double thisZ = this.getZ();
@@ -195,16 +211,21 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
         {
             BlockPos pos = isAscending ? startPos.above() : startPos;
             BlockPos exitPos1 = pos.offset(exitRelPos1);
-            if (this.level().getBlockState(new BlockPos(exitPos1.getX(), exitPos1.getY() - 1, exitPos1.getZ())).is(BlockTags.RAILS)) {
+            if (level.getBlockState(new BlockPos(exitPos1.getX(), exitPos1.getY() - 1, exitPos1.getZ())).is(BlockTags.RAILS)) {
                 exitPos1 = exitPos1.below();
             }
             BlockPos exitPos2 = pos.offset(exitRelPos2);
-            if (this.level().getBlockState(new BlockPos(exitPos2.getX(), exitPos2.getY() - 1, exitPos2.getZ())).is(BlockTags.RAILS)) {
+            if (level.getBlockState(new BlockPos(exitPos2.getX(), exitPos2.getY() - 1, exitPos2.getZ())).is(BlockTags.RAILS)) {
                 exitPos2 = exitPos2.below();
             }
-            Vec3 momentumPos = pos.getCenter().add(this.getDeltaMovement()).multiply(1, 0, 1);
-            exitPos = momentumPos.distanceTo(exitPos1.getCenter().multiply(1, 0, 1)) < momentumPos.distanceTo(exitPos2.getCenter().multiply(1, 0, 1)) ? exitPos1 : exitPos2;
-            BlockState exitState = this.level().getBlockState(exitPos);
+
+            Vec3 posCenter = Vec3.atCenterOf(pos);
+            Vec3 exit1Center = Vec3.atCenterOf(exitPos1);
+            Vec3 exit2Center = Vec3.atCenterOf(exitPos2);
+
+            Vec3 momentumPos = posCenter.add(this.getDeltaMovement()).multiply(1, 0, 1);
+            exitPos = momentumPos.distanceTo(exit1Center.multiply(1, 0, 1)) < momentumPos.distanceTo(exit2Center.multiply(1, 0, 1)) ? exitPos1 : exitPos2;
+            BlockState exitState = level.getBlockState(exitPos);
             exitIsAir = exitState.is(Blocks.AIR);
         }
 
@@ -236,14 +257,14 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
 
                 for (Vec3i nExitRelPos: List.of(nExitPair.getFirst(), nExitPair.getSecond())) {
                     BlockPos nPos = sourcePos.offset(nExitRelPos);
-                    if (this.level().getBlockState(new BlockPos(nPos.getX(), nPos.getY() - 1, nPos.getZ())).is(BlockTags.RAILS)) {
+                    if (level.getBlockState(new BlockPos(nPos.getX(), nPos.getY() - 1, nPos.getZ())).is(BlockTags.RAILS)) {
                         nPos = nPos.below();
                     }
 
                     if (checkedPositions.contains(nPos))
                         continue;
 
-                    BlockState nState = this.level().getBlockState(nPos);
+                    BlockState nState = level.getBlockState(nPos);
                     if (!isEligibleFastRail(nState))
                         return new ArrayList<>();
 
@@ -328,7 +349,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
 
         /*
         Braking Algorithm
-        Original:  
+        Original:
             double o;
             if (bl2) {
                 o = this.getDeltaMovement().horizontalDistance();
@@ -351,7 +372,7 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
                     double ratioToSlowdown = vanillaMaxSpeed / horizontalMomentum;
                     this.setDeltaMovement(momentum.multiply(ratioToSlowdown, 1., ratioToSlowdown));
                 }
-                
+
                 double brakeFactor = 0.59;
                 this.setDeltaMovement(this.getDeltaMovement().multiply(brakeFactor, 0., brakeFactor));
             }
@@ -398,21 +419,21 @@ public abstract class AbstractMinecartEntityMixin extends VehicleEntity {
         this.move(MoverType.SELF, movement);
 
 //        System.out.println("Actual: " + movement.horizontalDistance()
-//                + " " + this.level().getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 2.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)
-//                + " " + this.level().getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 1.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)
-//                + " " + this.level().getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 0.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)
-//                + " " + this.level().getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() + 1.), Mth.floor(this.getZ()))).is(BlockTags.RAILS));
+//                + " " + level.getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 2.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)
+//                + " " + level.getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 1.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)
+//                + " " + level.getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 0.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)
+//                + " " + level.getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() + 1.), Mth.floor(this.getZ()))).is(BlockTags.RAILS));
 
         {
             // Snap down after extra snap ups on ascending rails
             // Also snap down on descending rails
             if (railShape.isAscending()
-                    && !this.level().getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()))).is(BlockTags.RAILS)
-                    && !this.level().getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 1.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)) {
+                    && !level.getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()))).is(BlockTags.RAILS)
+                    && !level.getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 1.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)) {
 
-                if (this.level().getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 2.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)) {
+                if (level.getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 2.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)) {
                     this.setPos(this.getX(), this.getY() - 1, this.getZ());
-                } else if (this.level().getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 3.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)) {
+                } else if (level.getBlockState(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY() - 3.), Mth.floor(this.getZ()))).is(BlockTags.RAILS)) {
                     this.setPos(this.getX(), this.getY() - 2, this.getZ());
                 }
             }
