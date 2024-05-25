@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.1.1] - 2024-05-25
 - Make backwards compatible
   - from Minecraft 1.21 down to Minecraft 1.17
-  - from Fabric Loader 0.15.11 down to 0.14.20
+  - from Fabric Loader 0.15.11 down to Fabric Loader 0.14.20
+  - from Java 22 down to Java 17
 
 ## [3.1.0] - 2024-05-20
 - [!] Improve brakes for ridden carts
