@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [4.0.0] - 2024-12-15
-- Base mod on improved minecarts experiment
+- Rebase mod on improved minecarts experiment
   - The experimental code will be activated for all carts
   - Rideable carts will be set to /gamerule aceCartSpeed (default 20) blocks per second
   - All other carts will be set to 8 blocks per second speed
@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Full-Speed around corners
   - Full-Speed around hills
   - Consistent Jumps
-  - Perfect 1-tile breaks
+  - Perfect 1-tile brakes
   - ROLLER COASTER MECHANICS
 
 ## [3.1.1] - 2024-05-25
