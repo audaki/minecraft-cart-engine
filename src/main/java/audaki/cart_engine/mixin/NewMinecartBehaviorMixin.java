@@ -19,11 +19,10 @@ public abstract class NewMinecartBehaviorMixin extends MinecartBehavior {
 
     @Inject(at = @At("HEAD"), method = "getMaxSpeed", cancellable = true)
     public void _getMaxSpeed(ServerLevel level, CallbackInfoReturnable<Double> cir) {
-        int speedBlocksPerSecond = 8;
         if (minecart.isRideable()) {
-            speedBlocksPerSecond = level.getGameRules().getInt(AceGameRules.ACE_CART_SPEED);;
+            int speedBlocksPerSecond = level.getGameRules().getInt(AceGameRules.ACE_CART_SPEED);
+            cir.setReturnValue(speedBlocksPerSecond * (this.minecart.isInWater() ? 0.5 : 1.0) / 20.0);
+            cir.cancel();
         }
-        cir.setReturnValue(speedBlocksPerSecond * (this.minecart.isInWater() ? 0.5 : 1.0) / 20.0);
-        cir.cancel();
     }
 }
