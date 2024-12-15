@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2024-12-15
+- Base mod on improved minecarts experiment
+  - The experimental code will be activated for all carts
+  - Rideable carts will be set to /gamerule aceCartSpeed (default 20) blocks per second
+  - All other carts will be set to 8 blocks per second speed
+- Due to the new minecart experiment we now have the following features
+  - Full-Speed around corners
+  - Full-Speed around hills
+  - Consistent Jumps
+  - Perfect 1-tile breaks
+  - ROLLER COASTER MECHANICS
+
 ## [3.1.1] - 2024-05-25
 - Make backwards compatible
   - from Minecraft 1.21 down to Minecraft 1.17
@@ -50,12 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A little more slowdown before descending rails. Due to the vanilla parity you now start descending with 8m/s instead of 9.2m/s
 - A little more slowdown before detector / activator rails. On and directly before detector/activator rails you also move with 8m/s instead of 9.2m/s now. 
 - Mod Compatibility: We only overwrite the moveOnRail function now when there is actually a LivingEntity riding the cart
-- (technical) Mixin is targeting AbstractMinecartEntity again so we can inject and cancel the overwrite
+- (technical) Mixin is targeting AbstractMinecart again so we can inject and cancel the overwrite
 - Built for Minecraft 1.19.4
 
 ## [2.0.2] - 2023-03-15
 - Starting with this version only mc 1.19+ receives mod updates (2.0.1 is very stable for mc 1.18 and 1.17)
-- (technical) Refactored mixin to target MinecartEntity directly instead of AbstractMinecartEntity, therefore potentially increasing compatibility to other mods even more
+- (technical) Refactored mixin to target MinecartEntity directly instead of AbstractMinecart, therefore potentially increasing compatibility to other mods even more
 - Built for Minecraft 1.19.4
 
 ## [2.0.1] - 2023-02-20

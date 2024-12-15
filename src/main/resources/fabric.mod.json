@@ -24,12 +24,17 @@
   "icon": "assets/audaki_cart_engine/icon.png",
 
   "environment": "*",
+  "entrypoints": {
+    "main": [
+      "audaki.cart_engine.AceMod"
+    ]
+  },
   "mixins": [
     "audaki_cart_engine.mixins.json"
   ],
   "depends": {
     "fabricloader": "*",
-    "minecraft": ">=1.20 <=1.21.99",
+    "minecraft": ">=1.21.3 <=1.21.99",
     "java": ">=17"
   },
   "suggests": {
