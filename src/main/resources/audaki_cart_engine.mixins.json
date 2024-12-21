@@ -6,7 +6,8 @@
   "mixins": [
     "AbstractMinecartMixin",
     "GameRulesMixin",
-    "NewMinecartBehaviorMixin"
+    "NewMinecartBehaviorMixin",
+    "ServerConfigurationPacketListenerImplMixin"
   ],
   "injectors": {
     "defaultRequire": 1
