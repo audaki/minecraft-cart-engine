@@ -40,7 +40,14 @@ public abstract class NewMinecartBehaviorMixin extends MinecartBehavior {
             if (speed == 0) {
                 return;
             }
-            cir.setReturnValue(speed * (this.minecart.isInWater() ? 0.5 : 1.0) / 20.0);
+
+            double bonus = 1;
+            if (level.getBlockState(minecart.getCurrentBlockPosOrRailBelow()).is(AceBlockTags.BONUS_SPEED_RAIL)) {
+                double ruleBonus = level.getGameRules().getRule(AceGameRules.MINECART_BONUS_SPEED_RAIL_MULTIPLIER).get();
+                if (ruleBonus > 0.0) bonus = ruleBonus;
+            }
+
+            cir.setReturnValue(speed * bonus * (this.minecart.isInWater() ? 0.5 : 1.0) / 20.0);
             cir.cancel();
         };
 
