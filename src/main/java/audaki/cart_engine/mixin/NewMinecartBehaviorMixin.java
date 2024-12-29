@@ -1,5 +1,6 @@
 package audaki.cart_engine.mixin;
 
+import audaki.cart_engine.AceBlockTags;
 import audaki.cart_engine.AceGameRules;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -28,6 +29,10 @@ public abstract class NewMinecartBehaviorMixin extends MinecartBehavior {
     @Inject(at = @At("HEAD"), method = "getMaxSpeed", cancellable = true)
     public void _getMaxSpeed(ServerLevel level, CallbackInfoReturnable<Double> cir) {
         if (!minecart.isRideable()) {
+            return;
+        }
+
+        if (level.getBlockState(minecart.getCurrentBlockPosOrRailBelow()).is(AceBlockTags.SLOW_RAIL)) {
             return;
         }
 
