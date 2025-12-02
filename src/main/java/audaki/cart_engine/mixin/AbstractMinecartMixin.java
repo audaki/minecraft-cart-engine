@@ -2,31 +2,28 @@ package audaki.cart_engine.mixin;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.vehicle.*;
-import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+
 @Mixin(AbstractMinecart.class)
 public abstract class AbstractMinecartMixin extends VehicleEntity {
 
+    @Unique
+    private static final ThreadLocal<Boolean> IS_RIDEABLE_CONTEXT = ThreadLocal.withInitial(() -> false);
+
     @Shadow
     public abstract boolean isRideable();
-
-    @Shadow
-    public abstract boolean isFurnace();
-
-    @Shadow
-    private boolean onRails;
 
     @Mutable
     @Final
     @Shadow
     private MinecartBehavior behavior;
 
-    public AbstractMinecartMixin(EntityType<?> type, Level level) {
+    public AbstractMinecartMixin(EntityType<?> type, net.minecraft.world.level.Level level) {
         super(type, level);
     }
 
@@ -34,7 +31,9 @@ public abstract class AbstractMinecartMixin extends VehicleEntity {
     protected void juiceUpBehavior() {
         if (this.behavior instanceof OldMinecartBehavior) {
             AbstractMinecart instance = (AbstractMinecart) (Object) this;
-            this.behavior = new NewMinecartBehavior(instance);
+            if (instance.isRideable()) {
+                this.behavior = new NewMinecartBehavior(instance);
+            }
         }
     }
 
@@ -45,12 +44,18 @@ public abstract class AbstractMinecartMixin extends VehicleEntity {
 
     @Inject(at = @At("HEAD"), method = "tick")
     public void _tick(CallbackInfo ci) {
+        IS_RIDEABLE_CONTEXT.set(this.isRideable());
         this.juiceUpBehavior();
     }
 
+    @Inject(at = @At("RETURN"), method = "tick")
+    public void _tickEnd(CallbackInfo ci) {
+        IS_RIDEABLE_CONTEXT.set(false);
+    }
+
     @Inject(at = @At("HEAD"), method = "useExperimentalMovement", cancellable = true)
-    private static void _useExperimentalMovement(Level level, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(true);
+    private static void _useExperimentalMovement(net.minecraft.world.level.Level level, CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(IS_RIDEABLE_CONTEXT.get());
         cir.cancel();
     }
 }
