@@ -13,15 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractMinecart.class)
 public abstract class AbstractMinecartMixin extends VehicleEntity {
 
-    @Shadow
-    public abstract boolean isRideable();
-
-    @Shadow
-    public abstract boolean isFurnace();
-
-    @Shadow
-    private boolean onRails;
-
     @Mutable
     @Final
     @Shadow
@@ -40,7 +31,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntity {
     }
 
     @Inject(at = @At("HEAD"), method = "setInitialPos")
-    public void _setInitialPos(double d, double e, double f, CallbackInfo ci) {
+    public void _setInitialPos(CallbackInfo ci) {
         this.juiceUpBehavior();
     }
 
@@ -50,7 +41,7 @@ public abstract class AbstractMinecartMixin extends VehicleEntity {
     }
 
     @Inject(at = @At("HEAD"), method = "useExperimentalMovement", cancellable = true)
-    private static void _useExperimentalMovement(Level level, CallbackInfoReturnable<Boolean> cir) {
+    private static void _useExperimentalMovement(CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(true);
         cir.cancel();
     }
