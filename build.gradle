@@ -38,9 +38,10 @@ java {
 }
 
 jar {
-  inputs.property "archivesName", project.base.archivesName
+  def licenseArchivesName = project.base.archivesName.get()
+  inputs.property "archivesName", licenseArchivesName
 
   from("LICENSE") {
-    rename { "${it}_${project.base.archivesName.get()}" }
+    rename { "${it}_${licenseArchivesName}" }
   }
 }
