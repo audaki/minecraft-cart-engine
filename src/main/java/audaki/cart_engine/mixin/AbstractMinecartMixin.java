@@ -13,36 +13,36 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractMinecart.class)
 public abstract class AbstractMinecartMixin extends VehicleEntity {
 
-    @Mutable
-    @Final
-    @Shadow
-    private MinecartBehavior behavior;
+  @Mutable
+  @Final
+  @Shadow
+  private MinecartBehavior behavior;
 
-    public AbstractMinecartMixin(EntityType<?> type, Level level) {
-        super(type, level);
-    }
+  public AbstractMinecartMixin(EntityType<?> type, Level level) {
+    super(type, level);
+  }
 
-    @Unique
-    protected void juiceUpBehavior() {
-        if (this.behavior instanceof OldMinecartBehavior) {
-            AbstractMinecart instance = (AbstractMinecart) (Object) this;
-            this.behavior = new NewMinecartBehavior(instance);
-        }
+  @Unique
+  protected void juiceUpBehavior() {
+    if (this.behavior instanceof OldMinecartBehavior) {
+      AbstractMinecart instance = (AbstractMinecart) (Object) this;
+      this.behavior = new NewMinecartBehavior(instance);
     }
+  }
 
-    @Inject(at = @At("HEAD"), method = "setInitialPos")
-    public void _setInitialPos(CallbackInfo ci) {
-        this.juiceUpBehavior();
-    }
+  @Inject(at = @At("HEAD"), method = "setInitialPos")
+  public void _setInitialPos(CallbackInfo ci) {
+    this.juiceUpBehavior();
+  }
 
-    @Inject(at = @At("HEAD"), method = "tick")
-    public void _tick(CallbackInfo ci) {
-        this.juiceUpBehavior();
-    }
+  @Inject(at = @At("HEAD"), method = "tick")
+  public void _tick(CallbackInfo ci) {
+    this.juiceUpBehavior();
+  }
 
-    @Inject(at = @At("HEAD"), method = "useExperimentalMovement", cancellable = true)
-    private static void _useExperimentalMovement(CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(true);
-        cir.cancel();
-    }
+  @Inject(at = @At("HEAD"), method = "useExperimentalMovement", cancellable = true)
+  private static void _useExperimentalMovement(CallbackInfoReturnable<Boolean> cir) {
+    cir.setReturnValue(true);
+    cir.cancel();
+  }
 }

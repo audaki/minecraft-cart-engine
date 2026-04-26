@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(GameRules.class)
 public abstract class GameRulesMixin {
-    @ModifyExpressionValue(method = "<clinit>", at = @At(value = "FIELD", target = "Lnet/minecraft/world/flag/FeatureFlags;MINECART_IMPROVEMENTS:Lnet/minecraft/world/flag/FeatureFlag;", opcode = Opcodes.GETSTATIC))
-    private static FeatureFlag enableMinecartSpeed(FeatureFlag featureFlag) {
-        return FeatureFlags.VANILLA;
-    }
+  @ModifyExpressionValue(method = "<clinit>", at = @At(value = "FIELD", target = "Lnet/minecraft/world/flag/FeatureFlags;MINECART_IMPROVEMENTS:Lnet/minecraft/world/flag/FeatureFlag;", opcode = Opcodes.GETSTATIC))
+  private static FeatureFlag enableMinecartSpeed(FeatureFlag featureFlag) {
+    return FeatureFlags.VANILLA;
+  }
 }

@@ -10,11 +10,11 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ServerConfigurationPacketListenerImpl.class)
 public abstract class ServerConfigurationPacketListenerImplMixin {
-    @Unique
-    private static final FeatureFlagSet minecartFeatureFlagSet = FeatureFlagSet.of(FeatureFlags.MINECART_IMPROVEMENTS);
+  @Unique
+  private static final FeatureFlagSet minecartFeatureFlagSet = FeatureFlagSet.of(FeatureFlags.MINECART_IMPROVEMENTS);
 
-    @ModifyExpressionValue(method = "startConfiguration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/WorldData;enabledFeatures()Lnet/minecraft/world/flag/FeatureFlagSet;"))
-    private FeatureFlagSet fakeEnableMinecartExperiment(FeatureFlagSet featureFlagSet) {
-        return featureFlagSet.join(minecartFeatureFlagSet);
-    }
+  @ModifyExpressionValue(method = "startConfiguration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/WorldData;enabledFeatures()Lnet/minecraft/world/flag/FeatureFlagSet;"))
+  private FeatureFlagSet fakeEnableMinecartExperiment(FeatureFlagSet featureFlagSet) {
+    return featureFlagSet.join(minecartFeatureFlagSet);
+  }
 }

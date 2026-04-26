@@ -1,5 +1,5 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+  id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
 def targetJavaVersion = 25
@@ -8,39 +8,39 @@ version = project.mod_version
 group = project.maven_group
 
 base {
-    archivesName = "${project.archives_base_name}_mc${project.minecraft_version}"
+  archivesName = "${project.archives_base_name}_mc${project.minecraft_version}"
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+  minecraft "com.mojang:minecraft:${project.minecraft_version}"
+  implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+  implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
 processResources {
-    inputs.property "version", project.version
+  inputs.property "version", project.version
 
-    filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
-    }
+  filesMatching("fabric.mod.json") {
+    expand "version": inputs.properties.version
+  }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release.set(targetJavaVersion)
+  options.release.set(targetJavaVersion)
 }
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+  }
 
-    withSourcesJar()
+  withSourcesJar()
 }
 
 jar {
-    inputs.property "archivesName", project.base.archivesName
+  inputs.property "archivesName", project.base.archivesName
 
-    from("LICENSE") {
-        rename { "${it}_${project.base.archivesName.get()}" }
-    }
+  from("LICENSE") {
+    rename { "${it}_${project.base.archivesName.get()}" }
+  }
 }

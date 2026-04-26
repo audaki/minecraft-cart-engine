@@ -1,7 +1,7 @@
 # Automatically build the project for every push and pull request.
 
 name: build
-on: [pull_request, push]
+on: [ pull_request, push ]
 
 permissions:
   contents: read

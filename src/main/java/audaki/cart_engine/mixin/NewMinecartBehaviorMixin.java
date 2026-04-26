@@ -15,35 +15,35 @@ import java.util.function.IntConsumer;
 @Mixin(NewMinecartBehavior.class)
 public abstract class NewMinecartBehaviorMixin extends MinecartBehavior {
 
-    protected NewMinecartBehaviorMixin(AbstractMinecart abstractMinecart) {
-        super(abstractMinecart);
+  protected NewMinecartBehaviorMixin(AbstractMinecart abstractMinecart) {
+    super(abstractMinecart);
+  }
+
+  @Inject(at = @At("HEAD"), method = "getMaxSpeed", cancellable = true)
+  public void _getMaxSpeed(ServerLevel level, CallbackInfoReturnable<Double> cir) {
+    if (!minecart.isRideable()) {
+      return;
     }
 
-    @Inject(at = @At("HEAD"), method = "getMaxSpeed", cancellable = true)
-    public void _getMaxSpeed(ServerLevel level, CallbackInfoReturnable<Double> cir) {
-        if (!minecart.isRideable()) {
-            return;
-        }
+    IntConsumer setSpeed = (speed) -> {
+      if (speed == 0) {
+        return;
+      }
+      cir.setReturnValue(speed * (this.minecart.isInWater() ? 0.5 : 1.0) / 20.0);
+      cir.cancel();
+    };
 
-        IntConsumer setSpeed = (speed) -> {
-            if (speed == 0) {
-                return;
-            }
-            cir.setReturnValue(speed * (this.minecart.isInWater() ? 0.5 : 1.0) / 20.0);
-            cir.cancel();
-        };
-
-        Entity passenger = minecart.getFirstPassenger();
-        if (passenger == null) {
-            setSpeed.accept(level.getGameRules().get(AceGameRules.MINECART_MAX_SPEED_EMPTY_RIDER));
-            return;
-        }
-
-        if (passenger instanceof Player) {
-            setSpeed.accept(level.getGameRules().get(AceGameRules.MINECART_MAX_SPEED_PLAYER_RIDER));
-            return;
-        }
-
-        setSpeed.accept(level.getGameRules().get(AceGameRules.MINECART_MAX_SPEED_OTHER_RIDER));
+    Entity passenger = minecart.getFirstPassenger();
+    if (passenger == null) {
+      setSpeed.accept(level.getGameRules().get(AceGameRules.MINECART_MAX_SPEED_EMPTY_RIDER));
+      return;
     }
+
+    if (passenger instanceof Player) {
+      setSpeed.accept(level.getGameRules().get(AceGameRules.MINECART_MAX_SPEED_PLAYER_RIDER));
+      return;
+    }
+
+    setSpeed.accept(level.getGameRules().get(AceGameRules.MINECART_MAX_SPEED_OTHER_RIDER));
+  }
 }
