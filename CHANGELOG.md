@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0] - 2026-04-26
+
+- Support Minecraft 26.1+
+- Change non-rideable carts (hopper carts etc.) to be on OldMinecartBehavior
+- This means redstone contraptions should be fixed
+- BUT: this mod now must be installed client-side, or you will have choppy movement of non-rideable carts
+- Add labels and descriptions for the `ace:speed_player`, `ace:speed_other`, and `ace:speed_empty` game rules.
+
 ## [4.3.0] - 2025-12-11
 
 - Update for Minecraft 1.21.11+

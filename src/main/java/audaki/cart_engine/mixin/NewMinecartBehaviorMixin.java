@@ -30,7 +30,6 @@ public abstract class NewMinecartBehaviorMixin extends MinecartBehavior {
         return;
       }
       cir.setReturnValue(speed * (this.minecart.isInWater() ? 0.5 : 1.0) / 20.0);
-      cir.cancel();
     };
 
     Entity passenger = minecart.getFirstPassenger();

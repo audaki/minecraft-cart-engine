@@ -6,43 +6,34 @@ import net.minecraft.world.entity.vehicle.minecart.*;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(AbstractMinecart.class)
 public abstract class AbstractMinecartMixin extends VehicleEntity {
-
-  @Mutable
-  @Final
-  @Shadow
-  private MinecartBehavior behavior;
 
   public AbstractMinecartMixin(EntityType<?> type, Level level) {
     super(type, level);
   }
 
-  @Unique
-  protected void juiceUpBehavior() {
-    if (this.behavior instanceof OldMinecartBehavior) {
-      AbstractMinecart instance = (AbstractMinecart) (Object) this;
-      this.behavior = new NewMinecartBehavior(instance);
-    }
-  }
+  @Shadow
+  public abstract boolean isRideable();
 
-  @Inject(at = @At("HEAD"), method = "setInitialPos")
-  public void _setInitialPos(CallbackInfo ci) {
-    this.juiceUpBehavior();
-  }
-
-  @Inject(at = @At("HEAD"), method = "tick")
-  public void _tick(CallbackInfo ci) {
-    this.juiceUpBehavior();
-  }
-
-  @Inject(at = @At("HEAD"), method = "useExperimentalMovement", cancellable = true)
-  private static void _useExperimentalMovement(CallbackInfoReturnable<Boolean> cir) {
-    cir.setReturnValue(true);
-    cir.cancel();
+  @Redirect(
+      method = {
+          "<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/level/Level;)V",
+          "getCurrentBlockPosOrRailBelow",
+          "move",
+          "applyEffectsFromBlocks",
+          "pushOtherMinecart"
+      },
+      at = @At(
+          value = "INVOKE",
+          target = "Lnet/minecraft/world/entity/vehicle/minecart/AbstractMinecart;useExperimentalMovement(Lnet/minecraft/world/level/Level;)Z"
+      ),
+      require = 6,
+      allow = 6
+  )
+  private boolean ace$useExperimentalMovement(Level level) {
+    return this.isRideable();
   }
 }

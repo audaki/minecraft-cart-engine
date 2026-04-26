@@ -1,0 +1,8 @@
+{
+  "gamerule.ace.speed_player": "ACE: Player-Cart Speed",
+  "gamerule.ace.speed_player.description": "Max Speed, in blocks per second, for rideable carts with a player passenger. 0 = default",
+  "gamerule.ace.speed_other": "ACE: Mob-Cart Speed",
+  "gamerule.ace.speed_other.description": "Max Speed, in blocks per second, for rideable carts with a mob passenger. 0 = default",
+  "gamerule.ace.speed_empty": "ACE: Empty-Cart Speed",
+  "gamerule.ace.speed_empty.description": "Max Speed, in blocks per second, for rideable carts without a passenger. 0 = default"
+}
